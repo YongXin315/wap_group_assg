@@ -1,0 +1,9 @@
+CREATE DATABASE IF NOT EXISTS wap_system;
+USE wap_system;
+
+CREATE TABLE students (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id VARCHAR(50) NOT NULL UNIQUE,
+    student_email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL
+);
