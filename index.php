@@ -1,5 +1,6 @@
-<!-- This will be the login/ signup page -->
+<!-- This will be the login page -->
 
 <?php 
-    echo "Hello";
+require 'functions.php';
+
 ?>
