@@ -1,4 +1,4 @@
-<!-- This will be the login page -->
+<!-- login page for user and admin -->
 
 <?php 
 require 'functions.php';
