@@ -1,0 +1,17 @@
+{
+    "name": "yongxin/group_assg",
+    "autoload": {
+        "psr-4": {
+            "Yongxin\\GroupAssg\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "YongXin315",
+            "email": "xinchong909@gmail.com"
+        }
+    ],
+    "require": {
+        "mongodb/mongodb": "^2.1"
+    }
+}
