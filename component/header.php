@@ -43,12 +43,22 @@ if ($isLoggedIn && isset($_SESSION['student_name'])) {
                 <li><a href="#rooms">Room Availability</a></li>
                 <?php if ($isLoggedIn): ?>
                     <li><a href="my_bookings.php">My Bookings</a></li>
-                    <li><a href="logout.php" class="btn-logout">Logout</a></li>
+                    <li><a href="#" class="btn-logout" onclick="confirmLogout()">Logout</a></li>
                     <li class="welcome">Welcome, <?php echo htmlspecialchars($userName); ?></li>
                 <?php else: ?>
                     <li><a href="signup.php">Sign Up</a></li>
-                    <li><a href="index.php" class="btn-login">Login</a></li>
+                    <li><a href="login.php" class="btn-login">Login</a></li>
                 <?php endif; ?>
             </ul>
         </nav>
     </header>
+
+    <script>
+    function confirmLogout() {
+        if (confirm('Are you sure you want to logout?')) {
+            window.location.href = 'logout.php'; // Fixed: Removed '../'
+        }
+    }
+    </script>
+</body>
+</html>

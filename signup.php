@@ -1,9 +1,9 @@
 <?php session_start(); ?>
 <?php include './component/header.php'; ?>
-<link rel="stylesheet" href="./assets/styles.php">
+<link rel="stylesheet" href="./assests/styles.php"> <!-- Fixed: Changed assets to assests -->
 
 <div class="signup-wrapper">
-  <form method="POST" action="signup_handler.php" class="signup-form-container">
+  <form method="POST" action="handlers/signup_handler.php" class="signup-form-container"> <!-- Fixed: Removed ../ -->
     <h2 style="text-align:center; margin-bottom: 1.5rem; font-size: 1.8rem; font-weight: 700;">Create your Taylor's account to access Room Booking System.</h2>
 
     <input type="text" name="student_name" placeholder="Full Name" required class="signup-input">
@@ -32,3 +32,1415 @@
     }
   });
 </script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
+<mcfolder name="handler" path="c:\xampp\htdocs\wap\handler"></mcfolder>
+<?php include './component/footer.php'; ?>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const pw = document.querySelector("[name='password']").value;
+    const cpw = document.querySelector("[name='confirm_password']").value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
+
+<mcfile name="signup_handler.php" path="c:\xampp\htdocs\wap\signup_handler.php"></mcfile>
