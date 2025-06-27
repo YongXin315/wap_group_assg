@@ -9,16 +9,63 @@ $uri = "mongodb+srv://rootadmin:rootadmin@cluster0.ge5ruc5.mongodb.net/?retryWri
 $client = new MongoDB\Client($uri);
 
 // Select database and collection
-$db = $client->taylors;
+$db = $client->wap_system;
 $collection = $db->rooms;
 
-$rooms = $collection->find();
+// fetch filters from GET
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$filterType = isset($_GET['type']) ? $_GET['type'] : '';
+$filterStatus = isset($_GET['status']) ? $_GET['status'] : '';
+
+// build MongoDB query
+$conditions = [];
+
+// search by room name
+if ($search !== '') {
+    $conditions[] = ['room_name' => ['$regex' => $search, '$options' => 'i']];
+}
+// filter by room type
+if ($filterType !== '' && $filterType !== 'all') {
+    $conditions[] = ['type' => $filterType];
+}
+// filter by room status
+if ($filterStatus !== '' && $filterStatus !== 'all') {
+    $conditions[] = ['status' => $filterStatus];
+}
+
+$query = count($conditions) > 0 ? ['$and' => $conditions] : [];
+
+$rooms = $collection->find($query);
+
+// Get all unique room types for dropdown
+$types = $collection->distinct("type");
 ?>
 
 <!DOCTYPE html>
 <html>
 <body>
+    <!-- Filters -->
+    <form method="GET" action="" id="filterForm">
+        <input type="text" name="search" id="searchInput" placeholder="Search Room Name" value="<?= htmlspecialchars($search) ?>">
+
+        <select name="type" onchange="document.getElementById('filterForm').submit();">
+            <option value="all">All Types</option>
+            <?php foreach ($types as $type): ?>
+                <option value="<?= htmlspecialchars($type) ?>" <?= $filterType === $type ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($type) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+
+        <select name="status" onchange="document.getElementById('filterForm').submit();">
+            <option value="all">All Status</option>
+            <option value="Available" <?= $filterStatus === 'Available' ? 'selected' : '' ?>>Available</option>
+            <option value="Under Maintenance" <?= $filterStatus === 'Under Maintenance' ? 'selected' : '' ?>>Under Maintenance</option>
+        </select>
+    </form>
+
     <a href="admin_add_room.php"><button>Add Room</button></a>
+
     <table>
         <thead>
             <th>Room Name / Code</th>
@@ -31,7 +78,7 @@ $rooms = $collection->find();
             <?php foreach ($rooms as $room): ?>
                 <tr>
                     <td><?= htmlspecialchars($room['room_name']) ?></td>
-                    <td><?= htmlspecialchars("{$room['block']}, Level {$room['floor']}") ?></td>
+                    <td><?= htmlspecialchars("Block {$room['block']}, Level {$room['floor']}") ?></td>
                     <td><?= htmlspecialchars($room['type']) ?></td>
                     <td><?= htmlspecialchars($room['max_occupancy']) ?> people</td>
                     <td>
@@ -46,5 +93,17 @@ $rooms = $collection->find();
                 <?php endforeach; ?>
         </tbody>
     </table>
+
+    <script>
+        let timeout;
+        const searchInput = document.getElementById('searchInput');
+
+        searchInput.addEventListener('input', function () {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                document.getElementById('filterForm').submit();
+            }, 1000); // wait 1000ms after typing stops
+        });
+    </script>
 </body>
 </html>

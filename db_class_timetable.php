@@ -8,7 +8,7 @@ $uri = "mongodb+srv://rootadmin:rootadmin@cluster0.ge5ruc5.mongodb.net/?retryWri
 $client = new MongoDB\Client($uri);
 
 // Select database and collection
-$db = $client->taylors;
+$db = $client->wap_system;
 $collection = $db->class_timetable;
 
 $class_timetable = [
