@@ -156,12 +156,12 @@ body {
 .room-card .btn-primary {
     width: 100%;
     margin-top: 1rem;
-    background-color: #dc3545;
+    background-color: #c3272b;
 }
 
 /* Button Styles */
 .btn-primary {
-    background: #dc3545;
+    background: #c3272b;
     color: white;
     padding: 10px 20px;
     border: none;
@@ -174,7 +174,7 @@ body {
 }
 
 .btn-primary:hover {
-    background: #c82333;
+    background: #c3272b;
 }
 
 /* Responsive adjustments */

@@ -47,29 +47,19 @@ if ($isLoggedIn && isset($_SESSION['student_name'])) {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem 0.5rem; 
+            padding: 1rem 2rem;
         }
 
         .logo {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-left: 1.5rem; /* Increased left margin to move logo more left */
-        }
-
-        .nav-menu {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-            align-items: center;
-            margin-right: 1.5rem; /* Increased right margin to move nav more right */
-            margin-left: auto; /* Pushes the nav menu to the right */
         }
 
         .logo-icon {
             width: 40px;
             height: 40px;
-            background: #c3272b;
+            background: #dc3545;
             border-radius: 4px;
             display: flex;
             align-items: center;
@@ -100,11 +90,11 @@ if ($isLoggedIn && isset($_SESSION['student_name'])) {
         }
 
         .nav-menu a:hover {
-            color: #c3272b;
+            color: #dc3545;
         }
 
         .btn-login, .btn-logout {
-            background: #c3272b;
+            background: #dc3545;
             color: white !important;
             padding: 8px 16px;
             border-radius: 4px;
@@ -135,7 +125,7 @@ if ($isLoggedIn && isset($_SESSION['student_name'])) {
         }
 
         .btn-primary {
-            background: #c3272b;
+            background: #dc3545;
             color: white;
             padding: 10px 20px;
             border: none;
@@ -148,17 +138,14 @@ if ($isLoggedIn && isset($_SESSION['student_name'])) {
         }
 
         .btn-primary:hover {
-            background: #c3272b;
+            background: #c82333;
         }
 
         /* Content area needs margin-top to account for fixed header */
         .main-content {
             margin-top: 70px;
         }
-    <!-- Initialize Flatpickr early to prevent flash of default date picker -->
-
-
-    <?php initializeFlatpickr(); ?>
+    </style>
 </head>
 <body>
     <!-- Header -->
@@ -169,7 +156,7 @@ if ($isLoggedIn && isset($_SESSION['student_name'])) {
                 <div class="logo-text">Taylor's Room Booking System</div>
             </div>
             <ul class="nav-menu">
-                <li><a href="index.php">Home</a></li>
+                <li><a href="landingpage.php">Home</a></li>
                 <li><a href="landingpage.php#rooms">Room Availability</a></li>
                 <?php if ($isLoggedIn): ?>
                     <li><a href="my_bookings.php">My Bookings</a></li>
