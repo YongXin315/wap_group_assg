@@ -37,8 +37,11 @@ $query = count($conditions) > 0 ? ['$and' => $conditions] : [];
 
 $rooms = $collection->find($query);
 
-// Get all unique room types for dropdown
+// Get all unique room types and statuses for dropdowns
 $types = $collection->distinct("type");
+$statuses = $collection->distinct("status");
+sort($types);
+sort($statuses);
 ?>
 
 <!DOCTYPE html>
@@ -59,8 +62,11 @@ $types = $collection->distinct("type");
 
         <select name="status" onchange="document.getElementById('filterForm').submit();">
             <option value="all">All Status</option>
-            <option value="Available" <?= $filterStatus === 'Available' ? 'selected' : '' ?>>Available</option>
-            <option value="Under Maintenance" <?= $filterStatus === 'Under Maintenance' ? 'selected' : '' ?>>Under Maintenance</option>
+            <?php foreach ($statuses as $status): ?>
+            <option value="<?= htmlspecialchars($status) ?>" <?= $filterStatus === $status ? 'selected' : '' ?>>
+                <?= htmlspecialchars($status) ?>
+            </option>
+        <?php endforeach; ?>
         </select>
     </form>
 

@@ -15,12 +15,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $roomData = [
         '_id' => $_POST['room_code'],
         'room_name' => $_POST['room_name'],
+        'type' => $_POST['room_type'] === 'other' ? $_POST['new_type'] : $_POST['room_type'],
         'block' => $_POST['block'],
         'floor' => $_POST['floor'],
-        'type' => $_POST['room_type'] === 'other' ? $_POST['new_type'] : $_POST['room_type'],
+        'amenities' => $_POST['amenities'],
         'min_occupancy' => (int)$_POST['min_capacity'],
         'max_occupancy' => (int)$_POST['max_capacity'],
-        'amenities' => $_POST['amenities'],
         'status' => $_POST['status'] === 'other' ? $_POST['new_status'] : $_POST['status']
     ];
 
@@ -114,7 +114,7 @@ $statuses = array_unique(array_merge(['Available', 'Under Maintenance'], $collec
     style="<?= ($_POST['status'] ?? '') === 'other' ? 'display: block;' : 'display: none;' ?>">
 
         <a href="admin_manage_room.php"><button type="button">Cancel</button></a>
-        <button type="submit">Submit</button>
+        <button type="submit">Add Room</button>
     </form>
 </body>
 </html>
