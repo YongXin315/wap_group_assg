@@ -1,7 +1,6 @@
 <?php
 require 'vendor/autoload.php'; // Include Composer autoload
 
-// Replace with your own MongoDB URI
 $uri = "mongodb+srv://rootadmin:rootadmin@cluster0.ge5ruc5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 // Connect MongoDB Client
@@ -21,7 +20,7 @@ $admin = [
 
 // Insert many documents
 try {
-    $result = $collection->insertOne($admin);
+    $result = $collection->insertMany($admin);
     echo "Inserted " . $result->getInsertedCount() . " admin(s).";
 } catch (MongoDB\Driver\Exception\BulkWriteException $e) {
     echo "Insert failed: " . $e->getMessage();
