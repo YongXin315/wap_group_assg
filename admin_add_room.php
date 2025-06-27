@@ -58,51 +58,60 @@ $statuses = array_unique(array_merge(['Available', 'Under Maintenance'], $collec
 
     <form method="POST" action="">
         <label for="room_name">Room Name</label>
-        <input type="text" name="room_name" id="room_name" required>
+        <input type="text" name="room_name" id="room_name" required value="<?= htmlspecialchars($_POST['room_name'] ?? '') ?>">
 
         <label for="room_code">Room Code or ID</label>
-        <input type="text" name="room_code" id="room_code" required>
+        <input type="text" name="room_code" id="room_code" required value="<?= htmlspecialchars($_POST['room_code'] ?? '') ?>">
 
         <label for="room_type">Room Type</label>
         <select name="room_type" id="room_type" onchange="toggleNewInput('room_type', 'new_type_input')" required>
             <option value="">Select Type</option>
             <?php foreach ($types as $type): ?>
-                <option value="<?= htmlspecialchars($type) ?>"><?= htmlspecialchars($type) ?></option>
+                <option value="<?= htmlspecialchars($type) ?>"
+                    <?= ($_POST['room_type'] ?? '') === $type ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($type) ?>
+                </option>
             <?php endforeach; ?>
-            <option value="other">Other</option>
+            <option value="other" <?= ($_POST['room_type'] ?? '') === 'other' ? 'selected' : '' ?>>Other</option>
         </select>
-        <input type="text" name="new_type" id="new_type_input" placeholder="Enter new room type" style="display: none;">
-
+        <input type="text" name="new_type" id="new_type_input" 
+        value="<?= htmlspecialchars($_POST['new_type'] ?? '') ?>"
+        style="<?= ($_POST['room_type'] ?? '') === 'other' ? 'display: block;' : 'display: none;' ?>">
 
         <label for="block">Block</label>
         <select name="block" id="block" required>
             <option value="">Select Block</option>
             <?php foreach (['A', 'B', 'C', 'D', 'E'] as $block): ?>
-                <option value="<?= $block ?>"><?= $block ?></option>
+                <option value="<?= $block ?>" <?= ($_POST['block'] ?? '') === $block ? 'selected' : '' ?>><?= $block ?></option>
             <?php endforeach; ?>
         </select>
 
         <label for="floor">Floor</label>
-        <input type="text" name="floor" id="floor" required>
+        <input type="text" name="floor" id="floor" required value="<?= htmlspecialchars($_POST['floor'] ?? '') ?>">
 
         <label for="amenities">Amenities</label>
-        <input type="text" name="amenities" id="amenities">
+        <input type="text" name="amenities" id="amenities" value="<?= htmlspecialchars($_POST['amenities'] ?? '') ?>">
 
         <label for="min_capacity">Minimum Capacity</label>
-        <input type="number" name="min_capacity" id="min_capacity" required>
+        <input type="number" name="min_capacity" id="min_capacity" required value="<?= htmlspecialchars($_POST['min_capacity'] ?? '') ?>">
 
         <label for="max_capacity">Maximum Capacity</label>
-        <input type="number" name="max_capacity" id="max_capacity" required>
+        <input type="number" name="max_capacity" id="max_capacity" required value="<?= htmlspecialchars($_POST['max_capacity'] ?? '') ?>">
 
         <label for="status">Status</label>
         <select name="status" id="status" onchange="toggleNewInput('status', 'new_status_input')" required>
             <option value="">Select Status</option>
             <?php foreach ($statuses as $status): ?>
-                <option value="<?= htmlspecialchars($status) ?>"><?= htmlspecialchars($status) ?></option>
+                <option value="<?= htmlspecialchars($status) ?>" 
+                    <?= ($_POST['status'] ?? '') === $status ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($status) ?>
+                </option>
             <?php endforeach; ?>
-            <option value="other">Other</option>
+            <option value="other" <?= ($_POST['status'] ?? '') === 'other' ? 'selected' : '' ?>>Other</option>
         </select>
-        <input type="text" name="new_status" id="new_status_input" placeholder="Enter new status" style="display: none;">
+        <input type="text" name="new_status" id="new_status_input" 
+        value="<?= htmlspecialchars($_POST['new_status'] ?? '') ?>"
+    style="<?= ($_POST['status'] ?? '') === 'other' ? 'display: block;' : 'display: none;' ?>">
 
         <a href="admin_manage_room.php"><button type="button">Cancel</button></a>
         <button type="submit">Submit</button>
