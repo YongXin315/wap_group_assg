@@ -20,7 +20,8 @@ $rooms = [
         'type' => 'Discussion Room',
         'min_occupancy' => 4,
         'max_occupancy' => 8,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ],
     [
         '_id' => 'DR3.2',
@@ -30,7 +31,8 @@ $rooms = [
         'type' => 'Discussion Room',
         'min_occupancy' => 4,
         'max_occupancy' => 8,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ],
     [
         '_id' => 'DR3.3',
@@ -40,7 +42,8 @@ $rooms = [
         'type' => 'Discussion Room',
         'min_occupancy' => 4,
         'max_occupancy' => 8,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ],
     [
         '_id' => 'DR3.4',
@@ -50,7 +53,8 @@ $rooms = [
         'type' => 'Discussion Room',
         'min_occupancy' => 4,
         'max_occupancy' => 8,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ],
     [
         '_id' => 'DR4.1',
@@ -60,7 +64,8 @@ $rooms = [
         'type' => 'Discussion Room',
         'min_occupancy' => 4,
         'max_occupancy' => 8,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ],
     [
         '_id' => 'DR4.2',
@@ -70,7 +75,8 @@ $rooms = [
         'type' => 'Discussion Room',
         'min_occupancy' => 4,
         'max_occupancy' => 8,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ],
     [
         '_id' => 'DR4.3',
@@ -80,7 +86,8 @@ $rooms = [
         'type' => 'Discussion Room',
         'min_occupancy' => 4,
         'max_occupancy' => 8,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ],
     [
         '_id' => 'DR5.1',
@@ -90,7 +97,8 @@ $rooms = [
         'type' => 'Discussion Room',
         'min_occupancy' => 4,
         'max_occupancy' => 8,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ],
     [
         '_id' => 'DR5.2',
@@ -100,7 +108,8 @@ $rooms = [
         'type' => 'Discussion Room',
         'min_occupancy' => 4,
         'max_occupancy' => 8,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ],
     [
         '_id' => 'C7.01',
@@ -110,7 +119,8 @@ $rooms = [
         'type' => 'Computer Lab',
         'min_occupancy' => 1,
         'max_occupancy' => 30,
-        'amenities' => 'Whiteboard, TV with Wireless Display, 30 Computers'
+        'amenities' => 'Whiteboard, TV with Wireless Display, 30 Computers',
+        'status' => 'Available'
     ],
     [
         '_id' => 'C7.02',
@@ -120,7 +130,8 @@ $rooms = [
         'type' => 'Computer Lab',
         'min_occupancy' => 1,
         'max_occupancy' => 30,
-        'amenities' => 'Whiteboard, TV with Wireless Display, 30 Computers'
+        'amenities' => 'Whiteboard, TV with Wireless Display, 30 Computers',
+        'status' => 'Available'
     ],
     [
         '_id' => 'C7.03',
@@ -130,7 +141,8 @@ $rooms = [
         'type' => 'Computer Lab',
         'min_occupancy' => 1,
         'max_occupancy' => 30,
-        'amenities' => 'Whiteboard, TV with Wireless Display, 30 Computers'
+        'amenities' => 'Whiteboard, TV with Wireless Display, 30 Computers',
+        'status' => 'Available'
     ],
     [
         '_id' => 'C7.04',
@@ -140,7 +152,8 @@ $rooms = [
         'type' => 'Computer Lab',
         'min_occupancy' => 1,
         'max_occupancy' => 30,
-        'amenities' => 'Whiteboard, TV with Wireless Display, 30 Computers'
+        'amenities' => 'Whiteboard, TV with Wireless Display, 30 Computers',
+        'status' => 'Available'
     ],
     [
         '_id' => 'D8.01',
@@ -150,7 +163,8 @@ $rooms = [
         'type' => 'Classroom',
         'min_occupancy' => 1,
         'max_occupancy' => 30,
-        'amenities' => 'Whiteboard, TV with Wireless Display, Flipped Chairs'
+        'amenities' => 'Whiteboard, TV with Wireless Display, Flipped Chairs',
+        'status' => 'Available'
     ],
     [
         '_id' => 'D7.01',
@@ -160,7 +174,8 @@ $rooms = [
         'type' => 'Classroom',
         'min_occupancy' => 1,
         'max_occupancy' => 30,
-        'amenities' => 'Whiteboard, TV with Wireless Display, Flipped Chairs'
+        'amenities' => 'Whiteboard, TV with Wireless Display, Flipped Chairs',
+        'status' => 'Available'
     ],
     [
         '_id' => 'D6.01',
@@ -170,7 +185,8 @@ $rooms = [
         'type' => 'Classroom',
         'min_occupancy' => 1,
         'max_occupancy' => 30,
-        'amenities' => 'Whiteboard, TV with Wireless Display, Flipped Chairs'
+        'amenities' => 'Whiteboard, TV with Wireless Display, Flipped Chairs',
+        'status' => 'Available'
     ],
     [
         '_id' => 'D4.01',
@@ -180,7 +196,8 @@ $rooms = [
         'type' => 'Classroom',
         'min_occupancy' => 1,
         'max_occupancy' => 30,
-        'amenities' => 'Whiteboard, TV with Wireless Display, Rolling Chairs'
+        'amenities' => 'Whiteboard, TV with Wireless Display, Rolling Chairs',
+        'status' => 'Available'
     ],
     [
         '_id' => 'D3.02',
@@ -190,7 +207,8 @@ $rooms = [
         'type' => 'Classroom',
         'min_occupancy' => 1,
         'max_occupancy' => 30,
-        'amenities' => 'Whiteboard, TV with Wireless Display, Rolling Chairs'
+        'amenities' => 'Whiteboard, TV with Wireless Display, Rolling Chairs',
+        'status' => 'Available'
     ],
     [
         '_id' => 'E6.01',
@@ -200,7 +218,8 @@ $rooms = [
         'type' => 'Classroom',
         'min_occupancy' => 1,
         'max_occupancy' => 30,
-        'amenities' => 'Whiteboard, TV with Wireless Display, Desks and Chairs'
+        'amenities' => 'Whiteboard, TV with Wireless Display, Desks and Chairs',
+        'status' => 'Available'
     ],
     [
         '_id' => 'E7.01',
@@ -210,7 +229,8 @@ $rooms = [
         'type' => 'Classroom',
         'min_occupancy' => 1,
         'max_occupancy' => 30,
-        'amenities' => 'Whiteboard, TV with Wireless Display, Desks and Chairs'
+        'amenities' => 'Whiteboard, TV with Wireless Display, Desks and Chairs',
+        'status' => 'Available'
     ],
     [
         '_id' => 'E7.02',
@@ -220,7 +240,8 @@ $rooms = [
         'type' => 'Classroom',
         'min_occupancy' => 1,
         'max_occupancy' => 30,
-        'amenities' => 'Whiteboard, TV with Wireless Display, Desks and Chairs'
+        'amenities' => 'Whiteboard, TV with Wireless Display, Desks and Chairs',
+        'status' => 'Available'
     ],
     [
         '_id' => 'LT1',
@@ -230,7 +251,8 @@ $rooms = [
         'type' => 'Lecture Theatre',
         'min_occupancy' => 1,
         'max_occupancy' => 400,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ],
     [
         '_id' => 'LT2',
@@ -240,7 +262,8 @@ $rooms = [
         'type' => 'Lecture Theatre',
         'min_occupancy' => 1,
         'max_occupancy' => 200,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ],
     [
         '_id' => 'LT3',
@@ -250,7 +273,8 @@ $rooms = [
         'type' => 'Lecture Theatre',
         'min_occupancy' => 1,
         'max_occupancy' => 80,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ],
     [
         '_id' => 'LT4',
@@ -260,7 +284,8 @@ $rooms = [
         'type' => 'Lecture Theatre',
         'min_occupancy' => 1,
         'max_occupancy' => 80,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ],
     [
         '_id' => 'LT5',
@@ -270,7 +295,8 @@ $rooms = [
         'type' => 'Lecture Theatre',
         'min_occupancy' => 1,
         'max_occupancy' => 80,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ],
     [
         '_id' => 'LT6',
@@ -280,7 +306,8 @@ $rooms = [
         'type' => 'Lecture Theatre',
         'min_occupancy' => 1,
         'max_occupancy' => 80,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ],
     [
         '_id' => 'LT7',
@@ -290,7 +317,8 @@ $rooms = [
         'type' => 'Lecture Theatre',
         'min_occupancy' => 1,
         'max_occupancy' => 80,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ],
     [
         '_id' => 'LT8',
@@ -300,7 +328,8 @@ $rooms = [
         'type' => 'Lecture Theatre',
         'min_occupancy' => 1,
         'max_occupancy' => 80,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ],
     [
         '_id' => 'LT9',
@@ -310,7 +339,8 @@ $rooms = [
         'type' => 'Lecture Theatre',
         'min_occupancy' => 1,
         'max_occupancy' => 200,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ],
     [
         '_id' => 'LT10',
@@ -320,7 +350,8 @@ $rooms = [
         'type' => 'Lecture Theatre',
         'min_occupancy' => 1,
         'max_occupancy' => 150,
-        'amenities' => 'Whiteboard, TV with Wireless Display'
+        'amenities' => 'Whiteboard, TV with Wireless Display',
+        'status' => 'Available'
     ]
 ];
 
