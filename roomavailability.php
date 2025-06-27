@@ -204,7 +204,7 @@ $currentDateTime = date('F j, Y g:i:s A');
 
 <script>
     function bookRoom(roomId) {
-        alert('Booking functionality for room ' + roomId + ' will be implemented soon!');
+        window.location.href = 'roomdetails.php?room_id=' + encodeURIComponent(roomId);
     }
 
     // Add filter functionality
