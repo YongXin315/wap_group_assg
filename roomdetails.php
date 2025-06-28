@@ -20,6 +20,7 @@ if (empty($roomId)) {
 // Get room details from database
 try {
     $room = $db->rooms->findOne(['_id' => $roomId]);
+    $room = $db->rooms->findOne(['_id' => $roomId]);
     if (!$room) {
         // Fallback to static data if room not found
         $room = [
@@ -79,6 +80,40 @@ $eveningTimeSlots = [
     '4:00 AM - 5:00 AM', '5:00 AM - 6:00 AM', '6:00 AM - 7:00 AM', '7:00 AM - 8:00 AM'
 ];
 
+// Get the day of week for the selected date
+$selectedDayOfWeek = date('l', strtotime($selectedDate));
+
+// Query class_timetable for this room and day
+$schedule = [];
+$classSchedules = $db->class_timetable->find([
+    'room_id' => $room['_id'],
+    'day_of_week' => $selectedDayOfWeek
+]);
+foreach ($classSchedules as $class) {
+    $schedule[] = [
+        'start_time' => $class['start_time'],
+        'end_time' => $class['end_time'],
+        'type' => 'Class'
+    ];
+}
+
+// Query bookings for this room and day (if you have a bookings collection)
+$bookings = $db->bookings->find([
+    'room_id' => $room['_id'],
+    'day_of_week' => $selectedDayOfWeek
+]);
+foreach ($bookings as $booking) {
+    $schedule[] = [
+        'start_time' => $booking['start_time'],
+        'end_time' => $booking['end_time'],
+        'type' => 'Booking'
+    ];
+}
+
+// Sort by start_time
+usort($schedule, function($a, $b) {
+    return strcmp($a['start_time'], $b['start_time']);
+});
 // Get the day of week for the selected date
 $selectedDayOfWeek = date('l', strtotime($selectedDate));
 

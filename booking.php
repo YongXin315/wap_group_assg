@@ -138,24 +138,6 @@ if (isset($_GET['time'])) {
 if ($isCurrentDate && (int)date('H') >= $endHour) {
     $startHour = $endHour; // This will result in no available times
 }
-
-// Function to get availability for a specific date
-function getAvailabilityForDate($date, $roomName) {
-    $dayOfWeek = date('l', strtotime($date));
-    $dayOfMonth = date('j', strtotime($date));
-    
-    if ($dayOfWeek === 'Sunday' || $dayOfWeek === 'Saturday') {
-        $availabilityStatus = array_fill(0, 12, 'Available'); // Available on weekends
-    } elseif ($dayOfMonth % 3 === 0) {
-        $availabilityStatus = ['Available', 'Booked', 'In Use', 'Available', 'Available', 'Booked', 'Booked', 'Booked', 'Booked', 'Available', 'Available', 'Booked'];
-    } else {
-        $availabilityStatus = ['Available', 'Available', 'Available', 'Booked', 'Available', 'Available', 'Booked', 'Available', 'Available', 'Available', 'Available', 'Available'];
-    }
-    
-    return $availabilityStatus;
-}
-
-$eveningAvailability = array_fill(0, 12, 'Available');
 ?>
 
 <?php include_once 'component/header.php'; ?>
@@ -199,105 +181,47 @@ $eveningAvailability = array_fill(0, 12, 'Available');
 .summary-item {
     position: relative;
 }
-
-.main-container {
-    align-self: stretch;
-    height: 1205px;
-    min-height: 800px;
-    background: white;
-    overflow: hidden;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: flex-start;
-    display: inline-flex;
-    width: 100%;
-}
-
-.content-wrapper {
-    align-self: stretch;
-    height: 566px;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: flex-start;
-    display: flex;
-}
-
-.main-content {
-    align-self: stretch;
-    height: 586px;
-    padding-left: 24px;
-    padding-right: 24px;
-    padding-top: 20px;
-    padding-bottom: 20px;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 4px;
-    display: inline-flex;
-}
-
-.content-container {
-    flex: 1 1 0;
-    height: 546px;
-    max-width: 920px;
-    overflow: hidden;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: flex-start;
-    display: inline-flex;
-}
-
-.sidebar {
-    width: 360px;
-    height: 519px;
-    overflow: hidden;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: flex-start;
-    display: inline-flex;
-}
 </style>
 
-<div class="main-container">
-    <div class="content-wrapper">
-        <div class="main-content">
-            <div class="content-container">
-                <!-- Page Title -->
-                <div class="page-title-section">
-                    <div class="page-title">Confirm Room Booking</div>
-                </div>
+<div class="main-container confirm-booking">
+    <div class="content-wrapper confirm-booking">
+        <div class="booking-container">
+            <!-- Page Title -->
+            <div class="page-title-section">
+                <div class="page-title">Confirm Room Booking</div>
+            </div>
 
-                <!-- Booking Summary Section -->
-                <div class="summary-section">
-                    <div class="section-title">Selected Booking Summary</div>
-                    <div class="summary-content">
-                        <div class="summary-row">
-                            <div class="summary-item">
-                                <div class="summary-label">Selected Room</div>
-                                <div class="summary-value clickable" onclick="viewDetails('<?php echo htmlspecialchars($room['room_name']); ?>')"><?php echo htmlspecialchars($room['room_name']); ?></div>
-                            </div>
-                            <div class="summary-item">
-                                <div class="summary-label">Selected Date</div>
-                                <div class="summary-value-container">
-                                    <div class="summary-value" id="summary-date-value"><?php echo date('F j, Y', strtotime($selectedDate)); ?></div>
-                                    <div class="calendar-preview" id="calendar-preview">
-                                        <div class="calendar-header">
-                                            <div class="calendar-nav" onclick="previousMonth()">‹</div>
-                                            <div class="calendar-title" id="calendar-title">Next 7 Days</div>
-                                            <div class="calendar-nav" onclick="nextMonth()">›</div>
+            <!-- Booking Summary Section -->
+            <div class="summary-section">
+                <div class="section-title">Selected Booking Summary</div>
+                <div class="summary-content">
+                    <div class="summary-row">
+                        <div class="summary-item">
+                            <div class="summary-label">Selected Room</div>
+                            <div class="summary-value clickable" onclick="viewDetails('<?php echo htmlspecialchars($room['room_name']); ?>')"><?php echo htmlspecialchars($room['room_name']); ?></div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Selected Date</div>
+                            <div class="summary-value-container">
+                                <div class="summary-value" id="summary-date-value"><?php echo date('F j, Y', strtotime($selectedDate)); ?></div>
+                                <div class="calendar-preview" id="calendar-preview">
+                                    <div class="calendar-header">
+                                        <div class="calendar-nav" onclick="previousMonth()">‹</div>
+                                        <div class="calendar-title" id="calendar-title">Next 7 Days</div>
+                                        <div class="calendar-nav" onclick="nextMonth()">›</div>
+                                    </div>
+                                    <div class="calendar-grid">
+                                        <div class="calendar-days">
+                                            <div class="day-header">S</div>
+                                            <div class="day-header">M</div>
+                                            <div class="day-header">T</div>
+                                            <div class="day-header">W</div>
+                                            <div class="day-header">T</div>
+                                            <div class="day-header">F</div>
+                                            <div class="day-header">S</div>
                                         </div>
-                                        <div class="calendar-grid">
-                                            <div class="calendar-days">
-                                                <div class="day-header">S</div>
-                                                <div class="day-header">M</div>
-                                                <div class="day-header">T</div>
-                                                <div class="day-header">W</div>
-                                                <div class="day-header">T</div>
-                                                <div class="day-header">F</div>
-                                                <div class="day-header">S</div>
-                                            </div>
-                                            <div class="calendar-week" id="calendar-dates">
-                                                <!-- Calendar dates will be populated by JavaScript -->
-                                            </div>
+                                        <div class="calendar-week" id="calendar-dates">
+                                            <!-- Calendar dates will be populated by JavaScript -->
                                         </div>
                                     </div>
                                 </div>
@@ -305,135 +229,126 @@ $eveningAvailability = array_fill(0, 12, 'Available');
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Student Details Section -->
-                <div class="student-details-section">
-                    <div class="section-title">Student Details</div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="student_id" class="form-label">Student ID</label>
-                            <input type="text" id="student_id" name="student_id" class="form-input" 
-                                   placeholder="e.g., 0312345" value="<?php echo htmlspecialchars($_SESSION['student_id'] ?? ''); ?>" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="full_name" class="form-label">Full Name</label>
-                            <input type="text" id="full_name" name="full_name" class="form-input" 
-                                   placeholder="Enter your full name" value="<?php echo htmlspecialchars($_SESSION['student_name'] ?? ''); ?>" required>
-                        </div>
+            <!-- Student Details Section -->
+            <div class="student-details-section">
+                <div class="section-title">Student Details</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="student_id" class="form-label">Student ID</label>
+                        <input type="text" id="student_id" name="student_id" class="form-input" 
+                               placeholder="e.g., 0312345" value="<?php echo htmlspecialchars($_SESSION['student_id'] ?? ''); ?>" required>
                     </div>
                 </div>
-
-                <!-- Booking Details Section -->
-                <div class="booking-details-section">
-                    <div class="section-title">Booking Details</div>
-                    
-                    <!-- Date Selection -->
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="booking_date" class="form-label">Date</label>
-                            <input type="date" id="booking_date" name="booking_date" class="form-input" 
-                                   value="<?php echo htmlspecialchars($selectedDate); ?>" 
-                                   min="<?php echo $currentDate; ?>" required>
-                        </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="full_name" class="form-label">Full Name</label>
+                        <input type="text" id="full_name" name="full_name" class="form-input" 
+                               placeholder="Enter your full name" value="<?php echo htmlspecialchars($_SESSION['student_name'] ?? ''); ?>" required>
                     </div>
-                    
-                    <!-- Time Selection -->
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="start_time" class="form-label">Start Time</label>
-                            <select id="start_time" name="start_time" class="form-select" required>
-                                <option value="">Select start time</option>
-                                <?php
-                                // Generate time options based on room type and day
-                                for ($hour = $startHour; $hour <= $endHour; $hour++) {
-                                    $time = sprintf('%02d:00', $hour);
-                                    $displayTime = date('g:i A', strtotime($time));
-                                    $selected = ($time === $defaultStartTime && $hour >= $startHour) ? 'selected' : '';
-                                    echo "<option value=\"$time\" $selected>$displayTime</option>";
-                                }
-                                ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="end_time" class="form-label">End Time</label>
-                            <select id="end_time" name="end_time" class="form-select" required>
-                                <option value="">Select end time</option>
-                                <?php
-                                // End time starts from start time + 1 hour, up to closing time
-                                $defaultEndHour = min($endHour, $selectedHour + 1);
-                                
-                                // Generate time options from start time + 1 hour to closing time
-                                for ($hour = $defaultEndHour; $hour <= $endHour; $hour++) {
-                                    $time = sprintf('%02d:00', $hour);
-                                    $displayTime = date('g:i A', strtotime($time));
-                                    $selected = ($hour === $defaultEndHour) ? 'selected' : '';
-                                    echo "<option value=\"$time\" $selected>$displayTime</option>";
-                                }
-                                ?>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <!-- Availability Status -->
-                    <div class="form-row">
-                        <div class="availability-status-display" id="availability-status">
-                            <div class="status-message">Select a date and time to check availability</div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="purpose" class="form-label">Purpose</label>
-                            <input type="text" id="purpose" name="purpose" class="form-input" 
-                                   placeholder="Enter the Purpose" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="num_people" class="form-label">Number of People</label>
-                            <input type="number" id="num_people" name="num_people" class="form-input" 
-                                   min="1" max="50" placeholder="Enter number of people" required>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Success/Error Messages -->
-                <?php if ($bookingMessage): ?>
-                    <div class="success-message">
-                        <?php echo htmlspecialchars($bookingMessage); ?>
-                    </div>
-                <?php endif; ?>
-
-                <?php if ($bookingError): ?>
-                    <div class="error-message">
-                        <?php echo htmlspecialchars($bookingError); ?>
-                    </div>
-                <?php endif; ?>
-
-                <!-- Submit Button -->
-                <div class="submit-section">
-                    <button type="submit" class="submit-button" form="booking-form">Submit Booking</button>
-                </div>
-
-                <!-- Cancel Link -->
-                <div class="cancel-section">
-                    <a href="roomdetails.php?room_id=<?php echo urlencode($roomId); ?>" class="cancel-link">← Cancel</a>
                 </div>
             </div>
-            <div class="sidebar">
-                <!-- Sidebar content -->
+
+            <!-- Booking Details Section -->
+            <div class="booking-details-section">
+                <div class="section-title">Booking Details</div>
+                
+                <!-- Date Selection -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="booking_date" class="form-label">Date</label>
+                        <input type="date" id="booking_date" name="booking_date" class="form-input" 
+                               value="<?php echo htmlspecialchars($selectedDate); ?>" 
+                               min="<?php echo $currentDate; ?>" required>
+                    </div>
+                </div>
+                
+                <!-- Time Selection -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="start_time" class="form-label">Start Time</label>
+                        <select id="start_time" name="start_time" class="form-select" required>
+                            <option value="">Select start time</option>
+                            <?php
+                            // Generate time options based on room type and day
+                            for ($hour = $startHour; $hour <= $endHour; $hour++) {
+                                $time = sprintf('%02d:00', $hour);
+                                $displayTime = date('g:i A', strtotime($time));
+                                $selected = ($time === $defaultStartTime && $hour >= $startHour) ? 'selected' : '';
+                                echo "<option value=\"$time\" $selected>$displayTime</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="end_time" class="form-label">End Time</label>
+                        <select id="end_time" name="end_time" class="form-select" required>
+                            <option value="">Select end time</option>
+                            <?php
+                            // End time starts from start time + 1 hour, up to closing time
+                            $defaultEndHour = min($endHour, $selectedHour + 1);
+                            
+                            // Generate time options from start time + 1 hour to closing time
+                            for ($hour = $defaultEndHour; $hour <= $endHour; $hour++) {
+                                $time = sprintf('%02d:00', $hour);
+                                $displayTime = date('g:i A', strtotime($time));
+                                $selected = ($hour === $defaultEndHour) ? 'selected' : '';
+                                echo "<option value=\"$time\" $selected>$displayTime</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Availability Status -->
+                <div class="form-row">
+                    <div class="availability-status-display" id="availability-status">
+                        <div class="status-message">Select a date and time to check availability</div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="purpose" class="form-label">Purpose</label>
+                        <input type="text" id="purpose" name="purpose" class="form-input" 
+                               placeholder="Enter the Purpose" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="num_people" class="form-label">Number of People</label>
+                        <input type="number" id="num_people" name="num_people" class="form-input" 
+                               min="1" max="50" placeholder="Enter number of people" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success/Error Messages -->
+            <?php if ($bookingMessage): ?>
+                <div class="success-message">
+                    <?php echo htmlspecialchars($bookingMessage); ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($bookingError): ?>
+                <div class="error-message">
+                    <?php echo htmlspecialchars($bookingError); ?>
+                </div>
+            <?php endif; ?>
+
+            <!-- Submit Button -->
+            <div class="submit-section">
+                <button type="submit" class="submit-button" form="booking-form">Submit Booking</button>
+            </div>
+
+            <!-- Cancel Link -->
+            <div class="cancel-section">
+                <a href="roomdetails.php?room_id=<?php echo urlencode($roomId); ?>" class="cancel-link">← Cancel</a>
             </div>
         </div>
-    </div>
-    <div class="extended-schedule">
-        <!-- Extended schedule content -->
-    </div>
-    <div class="bottom-button-container">
-        <!-- Bottom button -->
     </div>
 </div>
 
@@ -697,8 +612,7 @@ function checkAvailability() {
     
     // Simulate availability check (replace with actual database query)
     setTimeout(() => {
-        const availabilityStatus = getAvailabilityForDate($selectedDate, $room['room_name']);
-        const isAvailable = !in_array('Booked', $availabilityStatus) && !in_array('In Use', $availabilityStatus);
+        const isAvailable = checkTimeSlotAvailability(selectedDate, startTime, endTime);
         
         if (isAvailable) {
             statusMessage.textContent = '✓ Time slot is available for booking';
@@ -844,87 +758,12 @@ function viewDetails(roomName) {
     // Get the selected date from the booking form
     const selectedDate = document.getElementById('booking_date').value;
     
-    // Redirect to room details page with room name and selected date
-    let url = 'roomdetails.php?room_id=' + encodeURIComponent(roomName);
+    // Redirect to room availability page with the selected date context
+    let url = 'roomavailability.php';
     if (selectedDate) {
-        url += '&date=' + encodeURIComponent(selectedDate);
+        url += '?date=' + encodeURIComponent(selectedDate);
     }
     window.location.href = url;
 }
 </script>
-
-<div class="breadcrumb-section">
-    <div class="breadcrumb-item">
-        <div class="text">Live View</div>
-    </div>
-    <div class="breadcrumb-item">
-        <div class="text">/</div>
-    </div>
-    <div class="breadcrumb-item current">
-        <div class="text"><?php echo htmlspecialchars($room['room_name']); ?></div>
-    </div>
-</div>
-
-<div class="room-details">
-    <div class="detail-row">
-        <div class="detail-item block">
-            <div class="detail-label">
-                <div class="text">Block</div>
-            </div>
-            <div class="detail-value">
-                <div class="text"><?php echo htmlspecialchars($room['block']); ?></div>
-            </div>
-        </div>
-        <div class="detail-item floor">
-            <div class="detail-label">
-                <div class="text">Floor</div>
-            </div>
-            <div class="detail-value">
-                <div class="text"><?php echo htmlspecialchars($room['floor']); ?></div>
-            </div>
-        </div>
-    </div>
-    <!-- Repeat for Type, Capacity, Amenities -->
-</div>
-
-<div class="schedule-container">
-    <div class="schedule-grid">
-        <div class="schedule-header">
-            <div class="schedule-header-row">
-                <?php foreach ($timeSlots as $slot): ?>
-                    <div class="time-slot-header">
-                        <div class="text"><?php echo str_replace(' - ', '<br/>-<br/>', $slot); ?></div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-        <div class="schedule-status">
-            <div class="schedule-status-row">
-                <?php foreach ($availabilityStatus as $status): ?>
-                    <div class="status-cell <?php echo strtolower(str_replace(' ', '-', $status)); ?>">
-                        <div class="text"><?php echo $status; ?></div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="timeline-container">
-    <?php foreach ($timeSlots as $index => $slot): ?>
-        <div class="timeline-item">
-            <div class="timeline-icon">
-                <div class="timeline-line"></div>
-            </div>
-            <div class="timeline-content">
-                <div class="timeline-time">
-                    <div class="text"><?php echo $slot; ?></div>
-                </div>
-                <div class="timeline-status">
-                    <div class="text"><?php echo $availabilityStatus[$index]; ?></div>
-                </div>
-            </div>
-        </div>
-    <?php endforeach; ?>
-</div>
 

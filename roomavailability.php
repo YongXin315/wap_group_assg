@@ -1,6 +1,7 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
 session_start();
+session_start();
 }
 
 // Set timezone to Malaysia
@@ -29,6 +30,18 @@ if (isset($_POST['selected_datetime'])) {
     $selectedDateTime = date('Y-m-d\TH:i');
 }
 
+// Get selected date/time from POST or URL parameters or use current time
+$selectedDateTime = '';
+if (isset($_POST['selected_datetime'])) {
+    $selectedDateTime = $_POST['selected_datetime'];
+} elseif (isset($_GET['date']) || isset($_GET['time'])) {
+    $date = $_GET['date'] ?? date('Y-m-d');
+    $time = $_GET['time'] ?? date('H:i');
+    $selectedDateTime = $date . 'T' . $time;
+} else {
+    $selectedDateTime = date('Y-m-d\TH:i');
+}
+
 $selectedDate = date('Y-m-d', strtotime($selectedDateTime));
 $selectedTime = date('H:i', strtotime($selectedDateTime));
 
@@ -38,6 +51,46 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
 ?>
 
 <?php include_once 'component/header.php'; ?>
+
+<style>
+.room-name.clickable {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.room-name.clickable:hover {
+    color: #2196F3;
+    text-decoration: underline;
+    transform: translateY(-1px);
+}
+
+.room-name.clickable::after {
+    content: "View Details";
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(33, 150, 243, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+.room-name.clickable:hover::after {
+    opacity: 1;
+}
+
+.room-card {
+    position: relative;
+}
+</style>
 
 <style>
 .room-name.clickable {
@@ -346,16 +399,62 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
                             
                         $statusClass = $isAvailable ? 'available' : 'occupied';
                         $statusText = $isAvailable ? 'Available' : 'Occupied';
+                            if ($isAvailable) {
+                                $nextTimes = [];
+
+                                // Check bookings
+                                $bookings = $db->bookings->find([
+                                    'room_id' => $room['_id'],
+                                    'day_of_week' => $selectedDayOfWeek
+                                ]);
+                                foreach ($bookings as $booking) {
+                                    $startTime = isset($booking['start_time']) ? $booking['start_time'] : '';
+                                    if (!empty($startTime)) {
+                                        $startTimeFormatted = date('H:i', strtotime($startTime));
+                                        if ($startTimeFormatted > $selectedTimeFormatted) {
+                                            $nextTimes[] = $startTimeFormatted;
+                                        }
+                                    }
+                                }
+
+                                // Check class_timetable
+                                $classSchedules = $db->class_timetable->find([
+                                    'room_id' => $room['_id'],
+                                    'day_of_week' => $selectedDayOfWeek
+                                ]);
+                                foreach ($classSchedules as $classSchedule) {
+                                    $startTime = isset($classSchedule['start_time']) ? $classSchedule['start_time'] : '';
+                                    if (!empty($startTime)) {
+                                        $startTimeFormatted = date('H:i', strtotime($startTime));
+                                        if ($startTimeFormatted > $selectedTimeFormatted) {
+                                            $nextTimes[] = $startTimeFormatted;
+                                        }
+                                    }
+                                }
+
+                                if (!empty($nextTimes)) {
+                                    sort($nextTimes);
+                                    $bookingDetails = 'Available until ' . $nextTimes[0];
+                                } else {
+                                    $bookingDetails = 'Available for the rest of the day';
+                                }
+                            }
+                            
+                        $statusClass = $isAvailable ? 'available' : 'occupied';
+                        $statusText = $isAvailable ? 'Available' : 'Occupied';
                             $cardClickable = $isAvailable;
                         }
                         
                         // Only add onclick if not under maintenance
                         $onclick = ($cardClickable)
                             ? 'onclick="goToBooking(\'' . htmlspecialchars($room['_id']) . '\')"'
+                            ? 'onclick="goToBooking(\'' . htmlspecialchars($room['_id']) . '\')"'
                             : '';
+                        
                         
                         echo '<div class="room-card ' . $statusClass . '" ' . $onclick . '>';
                         echo '<div class="room-info">';
+                        echo '<div class="room-name clickable" onclick="viewRoomDetails(\'' . htmlspecialchars($room['_id']) . '\', event)" title="Click to view room details">' . htmlspecialchars($room['room_name']) . '</div>';
                         echo '<div class="room-name clickable" onclick="viewRoomDetails(\'' . htmlspecialchars($room['_id']) . '\', event)" title="Click to view room details">' . htmlspecialchars($room['room_name']) . '</div>';
                         echo '<div class="room-status">';
                         echo '<div class="status-' . $statusClass . '">' . $statusText . '</div>';
@@ -367,10 +466,12 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
                         $roomCount++;
                     }
                     
+                    
                     // If no rooms found for this type, show a message
                     if ($roomCount == 0) {
                         echo '<div class="no-rooms-message">No ' . htmlspecialchars($roomType) . ' rooms found.</div>';
                     }
+                    
                     
                     echo '</div>';
                     echo '</div>';
@@ -380,6 +481,7 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
             } catch (Exception $e) {
                 echo '<div style="background: #ffebee; color: #c62828; padding: 10px; margin: 10px; border-radius: 5px;">';
                 echo '<strong>Database Error:</strong> ' . $e->getMessage();
+                    echo '</div>';
                     echo '</div>';
             }
             ?>
@@ -477,7 +579,9 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
                 card.style.display = 'none';
             }
     });
+    });
     }
 </script>
 
+<?php include_once 'component/footer.php'; ?> 
 <?php include_once 'component/footer.php'; ?> 
