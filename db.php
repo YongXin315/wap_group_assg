@@ -1,20 +1,27 @@
 <?php
-$host = 'localhost';
-$db   = 'wap_system';
-$user = 'root';
-$pass = 'root';
-$charset = 'utf8mb4';
+require_once __DIR__ . '/vendor/autoload.php';
 
-$dsn = "mysql:host=127.0.0.1;port=3306;dbname=$db;charset=$charset";
+use MongoDB\Client;
+use Dotenv\Dotenv;
 
-$options = [
-    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-];
-
+// Try to load environment variables from .env file if it exists
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
-} catch (\PDOException $e) {
-    die("Database connection failed: " . $e->getMessage());
+    $dotenv = Dotenv::createImmutable(__DIR__);
+    $dotenv->load();
+    $uri = $_ENV['MONGO_URI'] ?? '';
+} catch (Exception $e) {
+    // If .env file doesn't exist, use the connection string directly
+    $uri = "mongodb+srv://rootadmin:rootadmin@cluster0.ge5ruc5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 }
-?>
+
+if (empty($uri)) {
+    die("MongoDB URI is not defined.");
+}
+
+$client = new Client($uri, [
+    'serverSelectionTimeoutMS' => 5000,
+    'connectTimeoutMS' => 10000,
+]);
+
+// Choose your database (changed from 'taylors' to 'wap_system')
+$db = $client->wap_system;

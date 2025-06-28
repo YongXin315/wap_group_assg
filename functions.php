@@ -12,6 +12,113 @@ function redirectIfNotLoggedIn() {
     }
 }
 
+// Function to handle login toggle between student and admin
+function initializeLoginToggle() {
+    echo <<<EOT
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.login-tabs .tab');
+    const form = document.querySelector('form[action*="login_handler.php"]');
+    const studentIdInput = document.querySelector('input[name="student_id"]');
+    const passwordInput = document.querySelector('input[name="password"]');
+    
+    // Set initial state
+    let currentMode = 'student';
+    
+    // Add click event listeners to tabs
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Remove active class from all tabs
+            tabs.forEach(t => t.classList.remove('active'));
+            
+            // Add active class to clicked tab
+            this.classList.add('active');
+            
+            // Update current mode
+            currentMode = this.textContent.toLowerCase();
+            
+            // Update form action and input names based on mode
+            if (currentMode === 'student') {
+                form.action = 'handlers/login_handler.php';
+                studentIdInput.name = 'student_id';
+                studentIdInput.placeholder = 'Email Address or Student ID';
+                passwordInput.name = 'password';
+                
+                // Update form styling for student mode
+                form.classList.remove('admin-mode');
+                form.classList.add('student-mode');
+            } else if (currentMode === 'staff') {
+                form.action = 'handlers/admin_login_handler.php';
+                studentIdInput.name = 'admin_id';
+                studentIdInput.placeholder = 'Admin ID or Email';
+                passwordInput.name = 'admin_password';
+                
+                // Update form styling for admin mode
+                form.classList.remove('student-mode');
+                form.classList.add('admin-mode');
+            }
+            
+            // Clear form inputs when switching modes
+            studentIdInput.value = '';
+            passwordInput.value = '';
+            
+            // Update visual feedback
+            updateToggleVisuals(currentMode);
+        });
+    });
+    
+    function updateToggleVisuals(mode) {
+        const container = document.querySelector('.login-form-container');
+        const title = document.querySelector('.login-title');
+        const subtitle = document.querySelector('.login-subtitle');
+        const instruction = document.querySelector('.login-instruction');
+        
+        if (mode === 'student') {
+            container.style.borderLeft = '4px solid #C3272B';
+            title.innerHTML = 'Welcome to<br>Taylor\'s Room Booking System!';
+            subtitle.textContent = 'You are connecting to Taylor\'s Education';
+            instruction.textContent = 'Sign in with your Taylor\'s account.';
+        } else if (mode === 'staff') {
+            container.style.borderLeft = '4px solid #2E8B57';
+            title.innerHTML = 'Admin Portal<br>Taylor\'s Room Booking System';
+            subtitle.textContent = 'Administrative Access';
+            instruction.textContent = 'Sign in with your admin credentials.';
+        }
+    }
+    
+    // Initialize with student mode
+    updateToggleVisuals('student');
+});
+</script>
+EOT;
+}
+
+// Function to check if user is admin
+function isAdmin() {
+    return isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
+}
+
+// Function to redirect admin users to admin dashboard
+function redirectAdmin() {
+    if (isAdmin()) {
+        header("Location: admin_dashboard.php");
+        exit();
+    }
+}
+
+// Function to redirect non-admin users away from admin pages
+function requireAdmin() {
+    if (!isLoggedIn()) {
+        header("Location: login.php");
+        exit();
+    }
+    
+    if (!isAdmin()) {
+        header("Location: index.php");
+        exit();
+    }
+}
+
 // Function to generate date options for the next 7 days
 function getDateOptions() {
     $options = [];

@@ -1,13 +1,16 @@
 <?php
 session_start();
 
-require_once 'functions.php';
+require_once dirname(__DIR__) . '/functions.php';
 
 // Check if user is logged in
 $isLoggedIn = isLoggedIn();
+$isAdmin = isAdmin();
 $userName = '';
-if ($isLoggedIn && isset($_SESSION['student_name'])) {
-    $userName = $_SESSION['student_name'];
+
+if ($isLoggedIn) {
+    $userName = isset($_SESSION['student_name']) ? $_SESSION['student_name'] : 
+                (isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'User');
 }
 ?>
 <!DOCTYPE html>
@@ -17,7 +20,7 @@ if ($isLoggedIn && isset($_SESSION['student_name'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taylor's University - Room Booking System</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="style.css" rel="stylesheet">
+    <link href="./assests/main.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -164,20 +167,35 @@ if ($isLoggedIn && isset($_SESSION['student_name'])) {
     <!-- Header -->
     <header class="header">
         <nav class="nav-container">
+            <!-- Logo Section -->
             <div class="logo">
                 <img src="images/Taylors_Logo.png" alt="Taylor's Logo">
                 <div class="logo-text">Taylor's Room Booking System</div>
             </div>
+            
+            <!-- Navigation Menu -->
             <ul class="nav-menu">
+                <!-- Public Pages -->
                 <li><a href="index.php">Home</a></li>
-                <li><a href="landingpage.php#rooms">Room Availability</a></li>
+                <li><a href="roomavailability.php#rooms">Room Availability</a></li>
+                
                 <?php if ($isLoggedIn): ?>
-                    <li><a href="my_bookings.php">My Bookings</a></li>
-                    <li><a href="logout.php" class="btn-logout">Logout</a></li>
+                    <!-- Logged-in User Pages -->
+                    <li><a href="mybookings.php">My Bookings</a></li>
+                    
+                    <?php if ($isAdmin): ?>
+                        <!-- Admin-only Pages -->
+                        <li><a href="admin_dashboard.php">Admin Dashboard</a></li>
+                        <li><a href="admin_bookings.php">Manage Bookings</a></li>
+                    <?php endif; ?>
+                    
+                    <!-- User Account Section -->
                     <li class="welcome">Welcome, <?php echo htmlspecialchars($userName); ?></li>
+                    <li><a href="logout.php" class="btn-logout">Logout</a></li>
                 <?php else: ?>
+                    <!-- Guest User Pages -->
                     <li><a href="signup.php">Sign Up</a></li>
-                    <li><a href="index.php" class="btn-login">Login</a></li>
+                    <li><a href="login.php" class="btn-login">Login</a></li>
                 <?php endif; ?>
             </ul>
         </nav>

@@ -2,6 +2,8 @@
 include 'components/header.php';
 ?>
 
+<link rel="stylesheet" href="./assests/main.css">
+
 <!-- Hero Section with Background Image -->
 <section class="hero">
     <div class="hero-overlay"></div>
@@ -11,7 +13,7 @@ include 'components/header.php';
         <a href="#find-rooms" class="btn-primary">Get Started</a>
     </div>
 </section>
-<!-- Remove the <br> tag that was here -->
+
 <!-- Find Available Rooms Section -->
 <section id="find-rooms" class="section">
     <div class="container">
@@ -104,8 +106,8 @@ include 'components/header.php';
             <div class="room-card">
                 <div class="room-card-body">
                     <h3>Classroom D4.10</h3>
-                    <p>Time Slot: 10:00 AM - 11:30 AM</p>
-                    <p>Next available slot: 1 hour 30 mins</p>
+                    <p>Time Slot: 10:00 AM - 11:00 AM</p>
+                    <p>Next available slot: 1 hour</p>
                     <button class="btn-primary">Book This Room</button>
                 </div>
             </div>
@@ -113,7 +115,7 @@ include 'components/header.php';
             <!-- Room Card 6 -->
             <div class="room-card">
                 <div class="room-card-body">
-                    <h3>Lecture Theatre</h3>
+                    <h3>Lecture Theatre 13</h3>
                     <p>Time Slot: 5:00 PM - 6:00 PM</p>
                     <p>Next available slot: 1 hour</p>
                     <button class="btn-primary">Book This Room</button>
@@ -130,11 +132,9 @@ initializeFlatpickr();
 // Include the footer
 include 'components/footer.php';
 ?>
+
 <?php 
 require 'functions.php';
 
 ?>
 <?php
-// Include the footer
-include 'components/footer.php';
-?>
