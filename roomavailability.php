@@ -417,14 +417,10 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
             [date, time] = selectedDateTime.split('T');
         }
         
-        // Redirect to room availability page with the same date/time context
-        let url = 'roomavailability.php';
-        if (date || time) {
-            url += '?';
-            const params = [];
-            if (date) params.push('date=' + encodeURIComponent(date));
-            if (time) params.push('time=' + encodeURIComponent(time));
-            url += params.join('&');
+        // Redirect to room details page with room ID and selected date
+        let url = 'roomdetails.php?room_id=' + encodeURIComponent(roomId);
+        if (date) {
+            url += '&date=' + encodeURIComponent(date);
         }
         window.location.href = url;
     }
