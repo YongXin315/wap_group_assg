@@ -448,13 +448,10 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
                         // Only add onclick if not under maintenance
                         $onclick = ($cardClickable)
                             ? 'onclick="goToBooking(\'' . htmlspecialchars($room['_id']) . '\')"'
-                            ? 'onclick="goToBooking(\'' . htmlspecialchars($room['_id']) . '\')"'
                             : '';
-                        
                         
                         echo '<div class="room-card ' . $statusClass . '" ' . $onclick . '>';
                         echo '<div class="room-info">';
-                        echo '<div class="room-name clickable" onclick="viewRoomDetails(\'' . htmlspecialchars($room['_id']) . '\', event)" title="Click to view room details">' . htmlspecialchars($room['room_name']) . '</div>';
                         echo '<div class="room-name clickable" onclick="viewRoomDetails(\'' . htmlspecialchars($room['_id']) . '\', event)" title="Click to view room details">' . htmlspecialchars($room['room_name']) . '</div>';
                         echo '<div class="room-status">';
                         echo '<div class="status-' . $statusClass . '">' . $statusText . '</div>';
@@ -466,12 +463,10 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
                         $roomCount++;
                     }
                     
-                    
                     // If no rooms found for this type, show a message
                     if ($roomCount == 0) {
                         echo '<div class="no-rooms-message">No ' . htmlspecialchars($roomType) . ' rooms found.</div>';
                     }
-                    
                     
                     echo '</div>';
                     echo '</div>';
@@ -482,7 +477,6 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
                 echo '<div style="background: #ffebee; color: #c62828; padding: 10px; margin: 10px; border-radius: 5px;">';
                 echo '<strong>Database Error:</strong> ' . $e->getMessage();
                     echo '</div>';
-                    echo '</div>';
             }
             ?>
             </div>
@@ -491,40 +485,8 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
 </div>
 
 <script>
-    function goToBooking(roomId) {
-        // Get the selected date and time from the date picker
-        const dateTimeInput = document.querySelector('.date-picker-input');
-        let selectedDateTime = dateTimeInput ? dateTimeInput.value : '';
-        let date = '', time = '';
-        if (selectedDateTime) {
-            // Split into date and time
-            [date, time] = selectedDateTime.split('T');
-        }
-        let url = 'booking.php?room_id=' + encodeURIComponent(roomId);
-        if (date) url += '&date=' + encodeURIComponent(date);
-        if (time) url += '&time=' + encodeURIComponent(time);
-        window.location.href = url;
-    }
-
-    function viewRoomDetails(roomId, event) {
-        // Prevent the room card click event from triggering
-        event.stopPropagation();
-        
-        // Get the selected date and time from the date picker
-        const dateTimeInput = document.querySelector('.date-picker-input');
-        let selectedDateTime = dateTimeInput ? dateTimeInput.value : '';
-        let date = '', time = '';
-        if (selectedDateTime) {
-            // Split into date and time
-            [date, time] = selectedDateTime.split('T');
-        }
-        
-        // Redirect to room details page with room ID and selected date
-        let url = 'roomdetails.php?room_id=' + encodeURIComponent(roomId);
-        if (date) {
-            url += '&date=' + encodeURIComponent(date);
-        }
-        window.location.href = url;
+    function bookRoom(roomId) {
+        window.location.href = 'roomdetails.php?room_id=' + encodeURIComponent(roomId);
     }
 
     // Date/time picker functionality
@@ -579,9 +541,12 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
                 card.style.display = 'none';
             }
     });
-    });
+    }
+
+    function viewRoomDetails(roomId, event) {
+        event.stopPropagation(); // Prevents triggering parent click events if any
+        window.location.href = 'roomdetails.php?room_id=' + encodeURIComponent(roomId);
     }
 </script>
 
-<?php include_once 'component/footer.php'; ?> 
 <?php include_once 'component/footer.php'; ?> 
