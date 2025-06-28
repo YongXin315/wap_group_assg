@@ -19,7 +19,7 @@ if (empty($roomId)) {
 
 // Get room details from database
 try {
-    $room = $db->rooms->findOne(['room_name' => $roomId]);
+    $room = $db->rooms->findOne(['_id' => $roomId]);
     if (!$room) {
         // Fallback to static data if room not found
         $room = [
@@ -67,22 +67,40 @@ $eveningTimeSlots = [
     '4:00 AM - 5:00 AM', '5:00 AM - 6:00 AM', '6:00 AM - 7:00 AM', '7:00 AM - 8:00 AM'
 ];
 
-// Function to get availability status for a specific date
-function getAvailabilityForDate($date, $roomName) {
-    // This would typically query the database for actual bookings
-    // For now, we'll generate sample data based on the date
-    $dayOfWeek = date('w', strtotime($date));
-    $dayOfMonth = date('j', strtotime($date));
-    
-    // Sample logic: Different availability patterns for different days
-    if ($dayOfWeek == 0 || $dayOfWeek == 6) { // Weekend
-        return array_fill(0, 12, 'Available');
-    } elseif ($dayOfMonth % 3 == 0) { // Every 3rd day has some bookings
-        return ['Available', 'Booked', 'In Use', 'Available', 'Available', 'Booked', 'Booked', 'Booked', 'Booked', 'Available', 'Available', 'Booked'];
-    } else {
-        return ['Available', 'Available', 'Available', 'Booked', 'Available', 'Available', 'Booked', 'Available', 'Available', 'Available', 'Available', 'Available'];
-    }
+// Get the day of week for the selected date
+$selectedDayOfWeek = date('l', strtotime($selectedDate));
+
+// Query class_timetable for this room and day
+$schedule = [];
+$classSchedules = $db->class_timetable->find([
+    'room_id' => $room['_id'],
+    'day_of_week' => $selectedDayOfWeek
+]);
+foreach ($classSchedules as $class) {
+    $schedule[] = [
+        'start_time' => $class['start_time'],
+        'end_time' => $class['end_time'],
+        'type' => 'Class'
+    ];
 }
+
+// Query bookings for this room and day (if you have a bookings collection)
+$bookings = $db->bookings->find([
+    'room_id' => $room['_id'],
+    'day_of_week' => $selectedDayOfWeek
+]);
+foreach ($bookings as $booking) {
+    $schedule[] = [
+        'start_time' => $booking['start_time'],
+        'end_time' => $booking['end_time'],
+        'type' => 'Booking'
+    ];
+}
+
+// Sort by start_time
+usort($schedule, function($a, $b) {
+    return strcmp($a['start_time'], $b['start_time']);
+});
 
 // Get availability for selected date
 $availabilityStatus = getAvailabilityForDate($selectedDate, $room['room_name']);
@@ -424,3 +442,240 @@ function updateAvailabilityStatus(availabilityStatus) {
 </script>
 
 <?php include_once 'component/footer.php'; ?> 
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Room Booking</title>
+    <style>
+        /* General Layout Styles */
+        .main-container {
+            display: inline-flex;
+            align-items: flex-start;
+            justify-content: flex-start;
+            height: 1101px;
+            width: 100%;
+            padding-left: 160px;
+            padding-right: 160px;
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+
+        .content-wrapper {
+            display: inline-flex;
+            width: 100%;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .content-container {
+            width: 480px;
+            max-width: 960px;
+            height: 1081px;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            overflow: hidden;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .header-section {
+            width: 100%;
+            display: inline-flex;
+            justify-content: space-between;
+        }
+
+        .header-left .title {
+            color: #171212;
+            font-size: 32px;
+            font-weight: 700;
+            font-family: Inter;
+            line-height: 40px;
+        }
+
+        /* Selected Booking Summary Section */
+        .summary-section {
+            padding: 16px;
+            color: #171212;
+            font-size: 18px;
+            font-weight: 700;
+            font-family: Inter;
+            line-height: 23px;
+        }
+
+        .summary-card {
+            width: 100%;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .summary-card .details {
+            font-size: 14px;
+            font-family: Inter;
+            color: #171212;
+        }
+
+        .summary-card .label {
+            font-size: 14px;
+            color: #876363;
+        }
+
+        /* Room Details Section */
+        .room-details-section {
+            padding-top: 16px;
+            padding-bottom: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .details-card {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            outline: 1px solid #E5DBDB;
+            outline-offset: -1px;
+            margin-top: 16px;
+        }
+
+        /* Button Styles */
+        .button {
+            background-color: #C3272B;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 20px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: Inter;
+            cursor: pointer;
+        }
+
+        .cancel-button {
+            color: #876363;
+            font-size: 21px;
+            font-weight: 700;
+            text-align: center;
+            margin-top: 16px;
+            cursor: pointer;
+        }
+
+        /* Form Input Styles */
+        .input-field {
+            height: 56px;
+            padding: 15px;
+            background: white;
+            overflow: hidden;
+            border-radius: 12px;
+            outline: 1px solid #E5DBDB;
+            outline-offset: -1px;
+            color: #876363;
+            font-size: 16px;
+            font-family: Inter;
+        }
+
+        .input-placeholder {
+            color: #876363;
+            font-size: 16px;
+            font-family: Inter;
+            font-weight: 400;
+            line-height: 24px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+        <div class="content-wrapper">
+            <div class="content-container">
+                <!-- Header Section -->
+                <div class="header-section">
+                    <div class="header-left">
+                        <div class="title">Confirm Room Booking</div>
+                    </div>
+                </div>
+
+                <!-- Selected Booking Summary Section -->
+                <div class="summary-section">
+                    <div>Selected Booking Summary</div>
+                    <div class="summary-card">
+                        <div class="label">Selected Room</div>
+                        <div class="details">Computer Lab 21</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="label">Selected Date</div>
+                        <div class="details">June 20, 2025</div>
+                    </div>
+                </div>
+
+                <!-- Student Details Section -->
+                <div class="room-details-section">
+                    <div>Student Details</div>
+
+                    <div class="details-card">
+                        <div class="label">Student ID</div>
+                        <div class="input-field">
+                            <div class="input-placeholder">e.g., 0312345</div>
+                        </div>
+                    </div>
+
+                    <div class="details-card">
+                        <div class="label">Full Name</div>
+                        <div class="input-field">
+                            <div class="input-placeholder">Enter your full name</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Booking Details Section -->
+                <div class="room-details-section">
+                    <div>Booking Details</div>
+
+                    <div class="details-card">
+                        <div class="label">Start Time</div>
+                        <div class="input-field">
+                            <div class="input-placeholder">Enter the Start Time</div>
+                        </div>
+                    </div>
+
+                    <div class="details-card">
+                        <div class="label">End Time</div>
+                        <div class="input-field">
+                            <div class="input-placeholder">Enter the End Time</div>
+                        </div>
+                    </div>
+
+                    <div class="details-card">
+                        <div class="label">Purpose</div>
+                        <div class="input-field">
+                            <div class="input-placeholder">Enter the Purpose</div>
+                        </div>
+                    </div>
+
+                    <div class="details-card">
+                        <div class="label">Number of People</div>
+                        <div class="input-field">
+                            <div class="input-placeholder">Enter the Number of People</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Booking Button -->
+                <div class="button">Submit Booking</div>
+
+                <!-- Cancel Button -->
+                <div class="cancel-button">← Cancel</div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

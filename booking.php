@@ -86,9 +86,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $currentDate = date('Y-m-d');
 $currentTime = date('H:i');
 $selectedDate = $_GET['date'] ?? date('Y-m-d');
+$selectedTime = $_GET['time'] ?? date('H:i');
+
+// Extract hour from selected time for default start time
+$selectedHour = (int)date('H', strtotime($selectedTime));
+$defaultStartTime = sprintf('%02d:00', $selectedHour);
+
+// Get day of week for the selected date
+$selectedDayOfWeek = date('l', strtotime($selectedDate));
+$isCurrentDate = ($selectedDate === $currentDate);
+
+// Determine time range based on room type and day of week
+function getTimeRange($roomType, $dayOfWeek, $isCurrentDate, $currentHour) {
+    $isDiscussionRoom = (stripos($roomType, 'discussion') !== false);
+    
+    if ($isDiscussionRoom) {
+        if ($dayOfWeek === 'Saturday') {
+            $startHour = 9; // 9 AM
+            $endHour = 17;  // 5 PM
+        } else {
+            $startHour = 8; // 8 AM
+            $endHour = 21;  // 9 PM
+        }
+    } else {
+        $startHour = 8; // 8 AM
+        $endHour = 22;  // 10 PM
+    }
+    
+    // If it's current date, start from current hour or next hour
+    if ($isCurrentDate) {
+        $startHour = max($startHour, $currentHour);
+        // If current time is past closing time, start from opening time next day
+        if ($currentHour >= $endHour) {
+            $startHour = $startHour; // This will be handled in the calling code
+        }
+    }
+    
+    return ['start' => $startHour, 'end' => $endHour];
+}
+
+$timeRange = getTimeRange($room['type'], $selectedDayOfWeek, $isCurrentDate, (int)date('H'));
+$startHour = $timeRange['start'];
+$endHour = $timeRange['end'];
+
+// Adjust start hour if a specific time was passed
+if (isset($_GET['time'])) {
+    $startHour = max($startHour, $selectedHour);
+}
+
+// If current time is past closing time and it's today, don't allow booking
+if ($isCurrentDate && (int)date('H') >= $endHour) {
+    $startHour = $endHour; // This will result in no available times
+}
 ?>
 
 <?php include_once 'component/header.php'; ?>
+
+<style>
+.summary-value.clickable {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    display: inline-block;
+}
+
+.summary-value.clickable:hover {
+    color: #2196F3;
+    text-decoration: underline;
+    transform: translateY(-1px);
+}
+
+.summary-value.clickable::after {
+    content: "View Details";
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(33, 150, 243, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+.summary-value.clickable:hover::after {
+    opacity: 1;
+}
+
+.summary-item {
+    position: relative;
+}
+</style>
 
 <div class="main-container confirm-booking">
     <div class="content-wrapper confirm-booking">
@@ -105,7 +198,7 @@ $selectedDate = $_GET['date'] ?? date('Y-m-d');
                     <div class="summary-row">
                         <div class="summary-item">
                             <div class="summary-label">Selected Room</div>
-                            <div class="summary-value"><?php echo htmlspecialchars($room['room_name']); ?></div>
+                            <div class="summary-value clickable" onclick="viewDetails('<?php echo htmlspecialchars($room['room_name']); ?>')"><?php echo htmlspecialchars($room['room_name']); ?></div>
                         </div>
                         <div class="summary-item">
                             <div class="summary-label">Selected Date</div>
@@ -152,7 +245,7 @@ $selectedDate = $_GET['date'] ?? date('Y-m-d');
                     <div class="form-group">
                         <label for="full_name" class="form-label">Full Name</label>
                         <input type="text" id="full_name" name="full_name" class="form-input" 
-                               placeholder="Enter your full name" required>
+                               placeholder="Enter your full name" value="<?php echo htmlspecialchars($_SESSION['student_name'] ?? ''); ?>" required>
                     </div>
                 </div>
             </div>
@@ -178,21 +271,11 @@ $selectedDate = $_GET['date'] ?? date('Y-m-d');
                         <select id="start_time" name="start_time" class="form-select" required>
                             <option value="">Select start time</option>
                             <?php
-                            // Get current hour and ensure it's within 8 AM to 9 PM range
-                            $currentHour = (int)date('H');
-                            $startHour = max(8, $currentHour);
-                            $endHour = 21; // 9 PM
-                            
-                            // If current time is past 9 PM, start from 8 AM next day
-                            if ($currentHour >= 21) {
-                                $startHour = 8;
-                            }
-                            
-                            // Generate time options from current time to 9 PM
+                            // Generate time options based on room type and day
                             for ($hour = $startHour; $hour <= $endHour; $hour++) {
                                 $time = sprintf('%02d:00', $hour);
                                 $displayTime = date('g:i A', strtotime($time));
-                                $selected = ($hour === $startHour) ? 'selected' : '';
+                                $selected = ($time === $defaultStartTime && $hour >= $startHour) ? 'selected' : '';
                                 echo "<option value=\"$time\" $selected>$displayTime</option>";
                             }
                             ?>
@@ -205,20 +288,14 @@ $selectedDate = $_GET['date'] ?? date('Y-m-d');
                         <select id="end_time" name="end_time" class="form-select" required>
                             <option value="">Select end time</option>
                             <?php
-                            // End time starts from start time + 1 hour, up to 9 PM
-                            $startHour = max(8, $currentHour);
-                            $endHour = 21; // 9 PM
+                            // End time starts from start time + 1 hour, up to closing time
+                            $defaultEndHour = min($endHour, $selectedHour + 1);
                             
-                            // If current time is past 9 PM, start from 8 AM next day
-                            if ($currentHour >= 21) {
-                                $startHour = 8;
-                            }
-                            
-                            // Generate time options from start time + 1 hour to 9 PM
-                            for ($hour = $startHour + 1; $hour <= $endHour; $hour++) {
+                            // Generate time options from start time + 1 hour to closing time
+                            for ($hour = $defaultEndHour; $hour <= $endHour; $hour++) {
                                 $time = sprintf('%02d:00', $hour);
                                 $displayTime = date('g:i A', strtotime($time));
-                                $selected = ($hour === $startHour + 1) ? 'selected' : '';
+                                $selected = ($hour === $defaultEndHour) ? 'selected' : '';
                                 echo "<option value=\"$time\" $selected>$displayTime</option>";
                             }
                             ?>
@@ -286,6 +363,8 @@ $selectedDate = $_GET['date'] ?? date('Y-m-d');
     <input type="hidden" name="num_people" id="hidden_num_people">
 </form>
 
+<?php include_once 'component/footer.php'; ?> 
+
 <script>
 // Auto-fill hidden form when visible inputs change
 document.getElementById('student_id').addEventListener('input', function() {
@@ -321,6 +400,45 @@ function updateTimeOptions() {
     const selectedDate = document.getElementById('booking_date').value;
     const currentDate = new Date().toISOString().split('T')[0];
     const currentHour = new Date().getHours();
+    const isCurrentDate = (selectedDate === currentDate);
+    
+    // Get room type from PHP variable
+    const roomType = '<?php echo htmlspecialchars($room['type']); ?>';
+    
+    // Get day of week for selected date
+    const dateObj = new Date(selectedDate);
+    const dayOfWeek = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+    
+    // Determine time range based on room type and day of week
+    function getTimeRange(roomType, dayOfWeek, isCurrentDate, currentHour) {
+        const isDiscussionRoom = roomType.toLowerCase().includes('discussion');
+        
+        let startHour, endHour;
+        
+        if (isDiscussionRoom) {
+            if (dayOfWeek === 'Saturday') {
+                startHour = 9; // 9 AM
+                endHour = 17;  // 5 PM
+            } else {
+                startHour = 8; // 8 AM
+                endHour = 21;  // 9 PM
+            }
+        } else {
+            startHour = 8; // 8 AM
+            endHour = 22;  // 10 PM
+        }
+        
+        // If it's current date, start from current hour
+        if (isCurrentDate) {
+            startHour = Math.max(startHour, currentHour);
+        }
+        
+        return { start: startHour, end: endHour };
+    }
+    
+    const timeRange = getTimeRange(roomType, dayOfWeek, isCurrentDate, currentHour);
+    const startHour = timeRange.start;
+    const endHour = timeRange.end;
     
     // Get start time select
     const startTimeSelect = document.getElementById('start_time');
@@ -329,18 +447,6 @@ function updateTimeOptions() {
     // Clear existing options
     startTimeSelect.innerHTML = '<option value="">Select start time</option>';
     endTimeSelect.innerHTML = '<option value="">Select end time</option>';
-    
-    // Determine start hour based on selected date
-    let startHour = 8; // Default 8 AM
-    if (selectedDate === currentDate) {
-        // If today, start from current hour or next hour
-        startHour = Math.max(8, currentHour);
-        if (currentHour >= 21) {
-            startHour = 8; // If past 9 PM, start from 8 AM next day
-        }
-    }
-    
-    const endHour = 21; // 9 PM
     
     // Generate start time options
     for (let hour = startHour; hour <= endHour; hour++) {
@@ -381,6 +487,9 @@ function updateTimeOptions() {
     // Update hidden form values
     document.getElementById('hidden_start_time').value = startTimeSelect.value;
     document.getElementById('hidden_end_time').value = endTimeSelect.value;
+    
+    // Update end time options based on selected start time
+    updateEndTimeOptions();
 }
 
 document.getElementById('purpose').addEventListener('input', function() {
@@ -557,10 +666,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set default values for hidden form
     document.getElementById('hidden_booking_date').value = document.getElementById('booking_date').value;
+    document.getElementById('hidden_start_time').value = document.getElementById('start_time').value;
+    document.getElementById('hidden_end_time').value = document.getElementById('end_time').value;
 });
 
 document.getElementById('start_time').addEventListener('input', function() {
     document.getElementById('hidden_start_time').value = this.value;
+    updateEndTimeOptions();
     checkAvailability();
 });
 
@@ -568,6 +680,90 @@ document.getElementById('end_time').addEventListener('input', function() {
     document.getElementById('hidden_end_time').value = this.value;
     checkAvailability();
 });
+
+function updateEndTimeOptions() {
+    const selectedDate = document.getElementById('booking_date').value;
+    const startTime = document.getElementById('start_time').value;
+    const currentDate = new Date().toISOString().split('T')[0];
+    const currentHour = new Date().getHours();
+    const isCurrentDate = (selectedDate === currentDate);
+    
+    // Get room type from PHP variable
+    const roomType = '<?php echo htmlspecialchars($room['type']); ?>';
+    
+    // Get day of week for selected date
+    const dateObj = new Date(selectedDate);
+    const dayOfWeek = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+    
+    // Determine time range based on room type and day of week
+    function getTimeRange(roomType, dayOfWeek, isCurrentDate, currentHour) {
+        const isDiscussionRoom = roomType.toLowerCase().includes('discussion');
+        
+        let startHour, endHour;
+        
+        if (isDiscussionRoom) {
+            if (dayOfWeek === 'Saturday') {
+                startHour = 9; // 9 AM
+                endHour = 17;  // 5 PM
+            } else {
+                startHour = 8; // 8 AM
+                endHour = 21;  // 9 PM
+            }
+        } else {
+            startHour = 8; // 8 AM
+            endHour = 22;  // 10 PM
+        }
+        
+        return { start: startHour, end: endHour };
+        }
+
+    const timeRange = getTimeRange(roomType, dayOfWeek, isCurrentDate, currentHour);
+    const endHour = timeRange.end;
+    
+    // Get end time select
+    const endTimeSelect = document.getElementById('end_time');
+    
+    // Clear existing options
+    endTimeSelect.innerHTML = '<option value="">Select end time</option>';
+    
+    if (startTime) {
+        // Extract hour from start time
+        const startHour = parseInt(startTime.split(':')[0]);
+        const minEndHour = startHour + 1; // At least 1 hour after start time
+        
+        // Generate end time options from start time + 1 hour to closing time
+        for (let hour = minEndHour; hour <= endHour; hour++) {
+            const time = hour.toString().padStart(2, '0') + ':00';
+            const displayTime = new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+            
+            const option = document.createElement('option');
+            option.value = time;
+            option.textContent = displayTime;
+            if (hour === minEndHour) {
+                option.selected = true;
+            }
+            endTimeSelect.appendChild(option);
+        }
+        
+        // Update hidden form value
+        document.getElementById('hidden_end_time').value = endTimeSelect.value;
+    }
+}
+
+function viewDetails(roomName) {
+    // Get the selected date from the booking form
+    const selectedDate = document.getElementById('booking_date').value;
+    
+    // Redirect to room availability page with the selected date context
+    let url = 'roomavailability.php';
+    if (selectedDate) {
+        url += '?date=' + encodeURIComponent(selectedDate);
+    }
+    window.location.href = url;
+}
 </script>
 
-<?php include_once 'component/footer.php'; ?> 
