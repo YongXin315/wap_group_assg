@@ -14,7 +14,7 @@ $collection = $db->rooms;
 
 // Check if ID is passed
 if (!isset($_GET['id'])) {
-    header("Location: manage_rooms.php");
+    header("Location: admin_manage_room.php");
     exit;
 }
 
@@ -22,6 +22,7 @@ $original_id = $_GET['id'];
 $room = $collection->findOne(['_id' => $original_id]);
 
 if (!$room) {
+    // If not found stop execution
     die("Room not found.");
 }
 
@@ -29,7 +30,7 @@ if (!$room) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $new_id = $_POST['room_code'];
 
-    // Check for duplicate if room code changed
+    // Check for duplicate if room code is changed
     if ($new_id !== $original_id) {
         $exists = $collection->findOne(['_id' => $new_id]);
         if ($exists) {
@@ -37,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    // Proceed to update if no duplication error
     if (!isset($error)) {
         // Build updated data
         $updated = [
@@ -51,18 +53,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'status' => $_POST['status'] === 'other' ? $_POST['new_status'] : $_POST['status']
         ];
 
-        // Replace document (if room code changed)
+        // Delete old doc first if ID is changed
         if ($new_id !== $original_id) {
             $collection->deleteOne(['_id' => $original_id]);
         }
 
+        // Insert or replace with new or updated doc
         $collection->replaceOne(['_id' => $new_id], $updated);
         header("Location: admin_manage_room.php?updated=1");
         exit;
     }
 }
 
-// Get types and statuses
+// Get all distinct types and statuses from DB for dropdown
 $types = $collection->distinct("type");
 $statuses = array_unique(array_merge(['Available', 'Under Maintenance'], $collection->distinct("status")));
 ?>
@@ -77,6 +80,7 @@ $statuses = array_unique(array_merge(['Available', 'Under Maintenance'], $collec
             newInput.style.display = select.value === 'other' ? 'block' : 'none';
         }
 
+        // Show new input if "Other" is selected on page load
         window.onload = function () {
             toggleNewInput('room_type', 'new_type_input');
             toggleNewInput('status', 'new_status_input');
@@ -84,6 +88,7 @@ $statuses = array_unique(array_merge(['Available', 'Under Maintenance'], $collec
     </script>
 </head>
 <body>
+    <!-- Display error if room code already exists -->
     <?php if (isset($error)): ?>
         <div class="error"><?= $error ?></div>
     <?php endif; ?>

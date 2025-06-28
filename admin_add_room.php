@@ -1,3 +1,5 @@
+<!-- admin: add room data -->
+
 <?php
 require 'admin_auth.php';
 require 'vendor/autoload.php';
@@ -10,8 +12,9 @@ $client = new MongoDB\Client($uri);
 $db = $client->wap_system;
 $collection = $db->rooms;
 
-// handle form submission
+// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Prepare room data from form input
     $roomData = [
         '_id' => $_POST['room_code'],
         'room_name' => $_POST['room_name'],
@@ -24,9 +27,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'status' => $_POST['status'] === 'other' ? $_POST['new_status'] : $_POST['status']
     ];
 
-    // check for duplicate _id
+    // Check for duplicate _id
     $existing = $collection->findOne(['_id' => $roomData['_id']]);
     if ($existing) {
+        // Show error without clearing the form
         $error = "Room code already exists, please change a new code";
     } else {
         $collection->insertOne($roomData);
@@ -35,15 +39,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// fetch distinct types and statuses
+// Fetch distinct types and statuses for dropdowns
 $types = $collection->distinct("type");
-$statuses = array_unique(array_merge(['Available', 'Under Maintenance'], $collection->distinct("status")));
+$statuses = array_unique(array_merge(['Available', 'Under Maintenance'], $collection->distinct("status"))); // 2 defaults: Available & Under Maintenance, and custom
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <script>
+        // Toggle visibility of custom input fields when "Other" is selected
         function toggleNewInput(selectId, newInputId) {
             const select = document.getElementById(selectId);
             const newInput = document.getElementById(newInputId);
@@ -52,17 +57,21 @@ $statuses = array_unique(array_merge(['Available', 'Under Maintenance'], $collec
     </script>
 </head>
 <body>
+    <!-- Show error if room code already exists -->
     <?php if (isset($error)): ?>
         <div class="error"><?= $error ?></div>
     <?php endif; ?>
 
     <form method="POST" action="">
+        <!-- Room name -->
         <label for="room_name">Room Name</label>
         <input type="text" name="room_name" id="room_name" required value="<?= htmlspecialchars($_POST['room_name'] ?? '') ?>">
 
+        <!-- Room code or ID -->
         <label for="room_code">Room Code or ID</label>
         <input type="text" name="room_code" id="room_code" required value="<?= htmlspecialchars($_POST['room_code'] ?? '') ?>">
 
+        <!-- Room type dropdown -->
         <label for="room_type">Room Type</label>
         <select name="room_type" id="room_type" onchange="toggleNewInput('room_type', 'new_type_input')" required>
             <option value="">Select Type</option>
@@ -74,10 +83,12 @@ $statuses = array_unique(array_merge(['Available', 'Under Maintenance'], $collec
             <?php endforeach; ?>
             <option value="other" <?= ($_POST['room_type'] ?? '') === 'other' ? 'selected' : '' ?>>Other</option>
         </select>
+        <!-- Custom type input if "Other" is selected -->
         <input type="text" name="new_type" id="new_type_input" 
         value="<?= htmlspecialchars($_POST['new_type'] ?? '') ?>"
         style="<?= ($_POST['room_type'] ?? '') === 'other' ? 'display: block;' : 'display: none;' ?>">
 
+        <!-- Block selection (A–E only) -->
         <label for="block">Block</label>
         <select name="block" id="block" required>
             <option value="">Select Block</option>
@@ -86,18 +97,23 @@ $statuses = array_unique(array_merge(['Available', 'Under Maintenance'], $collec
             <?php endforeach; ?>
         </select>
 
+        <!-- Floor -->
         <label for="floor">Floor</label>
         <input type="text" name="floor" id="floor" required value="<?= htmlspecialchars($_POST['floor'] ?? '') ?>">
 
+        <!-- Amenities -->
         <label for="amenities">Amenities</label>
         <input type="text" name="amenities" id="amenities" value="<?= htmlspecialchars($_POST['amenities'] ?? '') ?>">
 
+        <!-- Minimum capacity -->
         <label for="min_capacity">Minimum Capacity</label>
         <input type="number" name="min_capacity" id="min_capacity" required value="<?= htmlspecialchars($_POST['min_capacity'] ?? '') ?>">
 
+        <!-- Maximum capacity -->
         <label for="max_capacity">Maximum Capacity</label>
         <input type="number" name="max_capacity" id="max_capacity" required value="<?= htmlspecialchars($_POST['max_capacity'] ?? '') ?>">
 
+        <!-- Room status dropdown -->
         <label for="status">Status</label>
         <select name="status" id="status" onchange="toggleNewInput('status', 'new_status_input')" required>
             <option value="">Select Status</option>
@@ -109,9 +125,10 @@ $statuses = array_unique(array_merge(['Available', 'Under Maintenance'], $collec
             <?php endforeach; ?>
             <option value="other" <?= ($_POST['status'] ?? '') === 'other' ? 'selected' : '' ?>>Other</option>
         </select>
+        <!-- Custom status input if "Other" is selected -->
         <input type="text" name="new_status" id="new_status_input" 
         value="<?= htmlspecialchars($_POST['new_status'] ?? '') ?>"
-    style="<?= ($_POST['status'] ?? '') === 'other' ? 'display: block;' : 'display: none;' ?>">
+        style="<?= ($_POST['status'] ?? '') === 'other' ? 'display: block;' : 'display: none;' ?>">
 
         <a href="admin_manage_room.php"><button type="button">Cancel</button></a>
         <button type="submit">Add Room</button>

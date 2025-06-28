@@ -12,32 +12,34 @@ $client = new MongoDB\Client($uri);
 $db = $client->wap_system;
 $collection = $db->rooms;
 
-// fetch filters from GET
-$search = isset($_GET['search']) ? trim($_GET['search']) : '';
-$filterType = isset($_GET['type']) ? $_GET['type'] : '';
-$filterStatus = isset($_GET['status']) ? $_GET['status'] : '';
+// Fetch filters from GET
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';      // search for room name
+$filterType = isset($_GET['type']) ? $_GET['type'] : '';            // room type filter
+$filterStatus = isset($_GET['status']) ? $_GET['status'] : '';      // room status filter
 
-// build MongoDB query
+// Build MongoDB query
 $conditions = [];
 
-// search by room name
+// Search by room name
 if ($search !== '') {
-    $conditions[] = ['room_name' => ['$regex' => $search, '$options' => 'i']];
+    $conditions[] = ['room_name' => ['$regex' => $search, '$options' => 'i']];  // case-insensitive for search
 }
-// filter by room type
+// Filter by room type
 if ($filterType !== '' && $filterType !== 'all') {
     $conditions[] = ['type' => $filterType];
 }
-// filter by room status
+// Filter by room status
 if ($filterStatus !== '' && $filterStatus !== 'all') {
     $conditions[] = ['status' => $filterStatus];
 }
 
+// Final MongoDB query
 $query = count($conditions) > 0 ? ['$and' => $conditions] : [];
 
+// Execute query to get matching records
 $rooms = $collection->find($query);
 
-// Get all unique room types and statuses for dropdowns
+// Get all unique room types and statuses for filter dropdowns
 $types = $collection->distinct("type");
 $statuses = $collection->distinct("status");
 sort($types);
@@ -49,8 +51,10 @@ sort($statuses);
 <body>
     <!-- Filters -->
     <form method="GET" action="" id="filterForm">
+        <!-- Search input -->
         <input type="text" name="search" id="searchInput" placeholder="Search Room Name" value="<?= htmlspecialchars($search) ?>">
 
+        <!-- Dropdown: Filter by room type -->
         <select name="type" onchange="document.getElementById('filterForm').submit();">
             <option value="all">All Types</option>
             <?php foreach ($types as $type): ?>
@@ -60,13 +64,14 @@ sort($statuses);
             <?php endforeach; ?>
         </select>
 
+        <!-- Dropdown: Filter by room status -->
         <select name="status" onchange="document.getElementById('filterForm').submit();">
             <option value="all">All Status</option>
             <?php foreach ($statuses as $status): ?>
-            <option value="<?= htmlspecialchars($status) ?>" <?= $filterStatus === $status ? 'selected' : '' ?>>
-                <?= htmlspecialchars($status) ?>
-            </option>
-        <?php endforeach; ?>
+                <option value="<?= htmlspecialchars($status) ?>" <?= $filterStatus === $status ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($status) ?>
+                </option>
+            <?php endforeach; ?>
         </select>
     </form>
 
@@ -100,6 +105,7 @@ sort($statuses);
         </tbody>
     </table>
 
+    <!-- Auto-submit search after 1 second of no typing -->
     <script>
         let timeout;
         const searchInput = document.getElementById('searchInput');
