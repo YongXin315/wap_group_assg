@@ -39,8 +39,8 @@ if ($isLoggedIn && isset($_SESSION['student_name'])) {
                 <div class="logo-text">Taylor's Room Booking System</div>
             </div>
             <ul class="nav-menu">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#rooms">Room Availability</a></li>
+                <li><a href="index.php">Home</a></li>
+                <li><a href="roomavailability.php">Room Availability</a></li>
                 <?php if ($isLoggedIn): ?>
                     <li><a href="my_bookings.php">My Bookings</a></li>
                     <li><a href="#" class="btn-logout" onclick="confirmLogout()">Logout</a></li>
