@@ -1,102 +1,140 @@
 <?php
-session_start();
-require 'db.php'; // This now connects to MongoDB
-
-// Remove this function as it's already defined in header.php
-// function isLoggedIn() {
-//     return isset($_SESSION['student_id']);
-// }
-
-// Include the header component which handles session, DB connection, and HTML head
-require_once 'component/header.php';
-
-// Get rooms from MongoDB
-$rooms = [];
-try {
-    $roomsCollection = $db->rooms;
-    $cursor = $roomsCollection->find();
-    foreach ($cursor as $room) {
-        $rooms[] = $room;
-    }
-} catch (Exception $e) {
-    // Handle error
-    echo "<script>console.error('Error fetching rooms: " . addslashes($e->getMessage()) . "');</script>";
-}
+include 'component/header.php';
 ?>
 
-<section id="home" class="hero">
-    <div class="hero-content">
+<!-- Hero Section with Background Image -->
+<section class="hero">
+    <div class="hero-overlay"></div>
+    <div class="container hero-container">
         <h1>Book Study & Meeting Rooms at Taylor's</h1>
-        <p>Find and easily book reservations for all students</p>
-        <a href="#search" class="cta-button">Get Started</a>
+        <p>Fast and easy room reservations for all students</p>
+        <a href="#find-rooms" class="btn-primary">Get Started</a>
     </div>
 </section>
-
-<section id="search" class="search-section">
+<!-- Remove the <br> tag that was here -->
+<!-- Find Available Rooms Section -->
+<section id="find-rooms" class="section">
     <div class="container">
-        <h2>Find Available Rooms</h2>
-        <form class="search-form" method="GET" action="#rooms">
+        <h2 class="section-title">Find Available Rooms</h2>
+        
+        <div class="form-row">
             <div class="form-group">
-                <label for="room-type">Room</label>
-                <select id="room-type" name="room_type">
+                <label for="room-select" class="form-label">Room</label>
+                <select id="room-select" class="form-control" style="color: #915457; border-color:#E5D1D1">
                     <option value="">Select a Room</option>
-                    <?php foreach ($roomTypes as $type): ?>
-                        <option value="<?php echo htmlspecialchars($type); ?>"><?php echo htmlspecialchars($type); ?></option>
-                    <?php endforeach; ?>
+                    <option value="lab21">Computer Lab 21</option>
+                    <option value="lab22">Computer Lab 22</option>
+                    <option value="room31">Discussion Room 3.1</option>
+                    <option value="room43">Discussion Room 4.3</option>
+                    <option value="d410">Classroom D4.10</option>
+                    <option value="theatre">Lecture Theatre</option>
                 </select>
             </div>
+            
             <div class="form-group">
-                <label for="date-time">When</label>
-                <input type="datetime-local" id="date-time" name="datetime">
+                <label for="date-time" class="form-label">When</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="datepicker" placeholder="Select a Date" class="form-control" style="color: #915457; border-color: #E5D1D1;">
+                    <select id="time-select" class="form-control" style="color: #915457; border-color: #E5D1D1;">
+                        <option value="">Select a Time</option>
+                        <?php
+                        $timeOptions = getTimeOptions();
+                        foreach ($timeOptions as $value => $label) {
+                            echo "<option value=\"$value\">$label</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
             </div>
-            <button type="submit" class="search-button">
-                <i class="fas fa-search"></i> Search Available Rooms
-            </button>
-        </form>
+        </div>
+        
+        <div class="form-actions">
+            <button class="btn-primary">Search Available Rooms</button>
+        </div>
     </div>
 </section>
 
-<section id="rooms" class="rooms-section">
+<!-- Available Rooms Section -->
+<section class="section">
     <div class="container">
-        <h2>Available Rooms</h2>
+        <h2 class="section-title">Available Rooms</h2>
+        
         <div class="rooms-grid">
-            <?php foreach ($rooms as $room):
-                $icon = 'fas fa-door-open';
-                if (isset($room['type'])) {
-                    switch ($room['type']) {
-                        case 'Computer Lab': $icon = 'fas fa-desktop'; break;
-                        case 'Classroom': $icon = 'fas fa-chalkboard-teacher'; break;
-                        case 'Discussion Room': $icon = 'fas fa-users'; break;
-                        case 'Lecture Theatre': $icon = 'fas fa-theater-masks'; break;
-                    }
-                }
-            ?>
-            <div class="room-card" data-room-type="<?php echo isset($room['type']) ? htmlspecialchars($room['type']) : ''; ?>">
-                <div class="room-image">
-                    <i class="<?php echo $icon; ?>"></i>
-                </div>
-                <div class="room-content">
-                    <h3 class="room-title"><?php echo isset($room['room_name']) ? htmlspecialchars($room['room_name']) : ''; ?></h3>
-                    <div class="room-details">
-                        Block <?php echo isset($room['block']) ? htmlspecialchars($room['block']) : ''; ?>, 
-                        Floor <?php echo isset($room['floor']) ? htmlspecialchars($room['floor']) : ''; ?><br>
-                        Capacity: <?php echo isset($room['min_occupancy']) ? $room['min_occupancy'] : '0'; ?>-<?php echo isset($room['max_occupancy']) ? $room['max_occupancy'] : '0'; ?> people<br>
-                        <small><?php echo isset($room['amenities']) ? htmlspecialchars($room['amenities']) : ''; ?></small>
-                    </div>
-                    <div class="room-availability">Available for booking</div>
-                    <?php if ($isLoggedIn): ?>
-                        <button class="book-button" onclick="bookRoom('<?php echo isset($room['room_id']) ? htmlspecialchars($room['room_id']) : ''; ?>')">Book This Room</button>
-                    <?php else: ?>
-                        <button class="book-button" onclick="alert('Please log in to book a room.'); window.location.href='index.php';">Login to Book</button>
-                    <?php endif; ?>
+            <!-- Room Card 1 -->
+            <div class="room-card">
+                <div class="room-card-body">
+                    <h3>Computer Lab 21</h3>
+                    <p>Time Slot: 10:00 AM - 11:00 AM</p>
+                    <p>Next available slot: 1 hour</p>
+                    <button class="btn-primary">Book This Room</button>
                 </div>
             </div>
-            <?php endforeach; ?>
+            
+            <!-- Room Card 2 -->
+            <div class="room-card">
+                <div class="room-card-body">
+                    <h3>Computer Lab 22</h3>
+                    <p>Time Slot: 8:00 AM - 10:00 AM</p>
+                    <p>Next available slot: 2 hour</p>
+                    <button class="btn-primary">Book This Room</button>
+                </div>
+            </div>
+            
+            <!-- Room Card 3 -->
+            <div class="room-card">
+                <div class="room-card-body">
+                    <h3>Discussion Room 3.1</h3>
+                    <p>Time Slot: 7:00 PM - 9:00 PM</p>
+                    <p>Next available slot: 2 hour</p>
+                    <button class="btn-primary">Book This Room</button>
+                </div>
+            </div>
+            
+            <!-- Room Card 4 -->
+            <div class="room-card">
+                <div class="room-card-body">
+                    <h3>Discussion Room 4.3</h3>
+                    <p>Time Slot: 2:00 PM - 3:00 PM</p>
+                    <p>Next available slot: 1 hour</p>
+                    <button class="btn-primary">Book This Room</button>
+                </div>
+            </div>
+            
+            <!-- Room Card 5 -->
+            <div class="room-card">
+                <div class="room-card-body">
+                    <h3>Classroom D4.10</h3>
+                    <p>Time Slot: 10:00 AM - 11:30 AM</p>
+                    <p>Next available slot: 1 hour 30 mins</p>
+                    <button class="btn-primary">Book This Room</button>
+                </div>
+            </div>
+            
+            <!-- Room Card 6 -->
+            <div class="room-card">
+                <div class="room-card-body">
+                    <h3>Lecture Theatre</h3>
+                    <p>Time Slot: 5:00 PM - 6:00 PM</p>
+                    <p>Next available slot: 1 hour</p>
+                    <button class="btn-primary">Book This Room</button>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
 <?php
-// Include the footer component which contains the footer HTML and JavaScript
-require_once 'component/footer.php';
+// Initialize the Flatpickr calendar
+initializeFlatpickr();
+
+// Include the footer
+include 'component/footer.php';
+?>
+<?php 
+require 'functions.php';
+
+?>
+<?php
+// Include the footer
+include 'component/footer.php';
 ?>
