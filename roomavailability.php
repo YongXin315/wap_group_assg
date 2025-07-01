@@ -6,16 +6,10 @@ if (session_status() === PHP_SESSION_NONE) {
 // Set timezone to Malaysia
 date_default_timezone_set('Asia/Kuala_Lumpur');
 
-// Check if user is logged in
-if (!isset($_SESSION['student_id'])) {
-    header('Location: login.php');
-    exit();
-}
-
-require_once 'db.php';
-
 // Get current date and time in Malaysia timezone
 $currentDateTime = date('F j, Y g:i:s A');
+
+require_once 'db.php';
 
 // Get selected date/time from POST or URL parameters or use current time
 if (isset($_GET['selected_datetime'])) {
@@ -35,6 +29,43 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
 <?php include_once 'component/header.php'; ?>
 
 <style>
+body, html {
+    min-height: 100vh;
+    height: 100%;
+}
+.page-vertical-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+.main-container {
+    flex: 1 0 auto;
+    background: white;
+    overflow: hidden;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    display: flex;
+}
+.content-wrapper {
+    width: 100%;
+    padding-left: 160px;
+    padding-right: 160px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    justify-content: center;
+    align-items: flex-start;
+    display: flex;
+}
+.content-container {
+    flex: 1 1 0;
+    max-width: 960px;
+    overflow: hidden;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    display: flex;
+}
 .room-name.clickable {
     cursor: pointer;
     transition: all 0.3s ease;
@@ -51,206 +82,180 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
 }
 </style>
 
-
-<div class="main-container">
-    <div class="content-wrapper">
-        <div class="content-container">
-            <!-- Header Section -->
-            <div class="header-section">
-                <div class="header-left">
-                    <div class="title">Taylor's Room Booking System</div>
-                    <div class="datetime"><?php echo $currentDateTime; ?></div>
-                </div>
-                <div class="date-picker-section">
-                    <div class="date-picker-label">
-                        <div class="date-picker-label-text">When</div>
+<div class="page-vertical-wrapper">
+    <div class="main-container">
+        <div class="content-wrapper">
+            <div class="content-container">
+                <!-- Header Section -->
+                <div class="header-section">
+                    <div class="header-left">
+                        <div class="title">Taylor's Room Booking System</div>
+                        <div class="datetime"><?php echo $currentDateTime; ?></div>
                     </div>
-                    <form id="datetimeForm" method="GET">
-                        <input type="datetime-local" name="selected_datetime" class="date-picker-input" 
-                               value="<?php echo $selectedDateTime; ?>" 
-                               min="<?php echo date('Y-m-d\TH:i'); ?>">
-                    </form>
+                    <div class="date-picker-section">
+                        <div class="date-picker-label">
+                            <div class="date-picker-label-text">When</div>
+                        </div>
+                        <form id="datetimeForm" method="GET">
+                            <input type="datetime-local" name="selected_datetime" class="date-picker-input" 
+                                   value="<?php echo $selectedDateTime; ?>" 
+                                   min="<?php echo date('Y-m-d\TH:i'); ?>">
+                        </form>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Statistics Section -->
-            <div class="stats-section" id="statsSection">
-                <?php
-                try {
-                    // Calculate room availability based on selected date/time
-                    $totalRooms = $db->rooms->countDocuments();
-                    
-                    // Check for bookings and class timetables at the selected date/time
-                    $bookedRooms = 0;
-                    $classScheduledRooms = 0;
-
-                    // Check for bookings
+                <!-- Statistics Section -->
+                <div class="stats-section" id="statsSection">
+                    <?php
                     try {
-                        $bookedRoomsQuery = $db->bookings->find([
-                            'booking_date' => $selectedDate,  // Use specific date instead
-                            'status' => 'approved'
-                        ]);
-
-                        $bookedRoomIds = [];
-                        foreach ($bookedRoomsQuery as $booking) {
-                            $startTime = isset($booking['start_time']) ? $booking['start_time'] : '';
-                            $endTime = isset($booking['end_time']) ? $booking['end_time'] : '';
-                            
-                            if (!empty($startTime) && !empty($endTime)) {
-                                $startTimeFormatted = date('H:i', strtotime($startTime));
-                                $endTimeFormatted = date('H:i', strtotime($endTime));
-                                
-                                // Check if the selected time falls within the booking period
-                                if ($selectedTimeFormatted >= $startTimeFormatted && $selectedTimeFormatted < $endTimeFormatted) {
-                                    $bookedRoomIds[] = $booking['room_id'];
-                                }
-                            }
-                        }
-                        $bookedRooms = count(array_unique($bookedRoomIds));
-                    } catch (Exception $e) {
+                        // Calculate room availability based on selected date/time
+                        $totalRooms = $db->rooms->countDocuments();
+                        
+                        // Check for bookings and class timetables at the selected date/time
                         $bookedRooms = 0;
-                    }
-
-                    // Check for class timetables
-                    try {
-                        $classTimetablesQuery = $db->class_timetable->find([
-                            'day_of_week' => $selectedDayOfWeek
-                        ]);
-
-                        $classScheduledRoomIds = [];
-                        foreach ($classTimetablesQuery as $classSchedule) {
-                            $startTime = isset($classSchedule['start_time']) ? $classSchedule['start_time'] : '';
-                            $endTime = isset($classSchedule['end_time']) ? $classSchedule['end_time'] : '';
-                            
-                            if (!empty($startTime) && !empty($endTime)) {
-                                $startTimeFormatted = date('H:i', strtotime($startTime));
-                                $endTimeFormatted = date('H:i', strtotime($endTime));
-                                
-                                // Check if the selected time falls within the class schedule
-                                if ($selectedTimeFormatted >= $startTimeFormatted && $selectedTimeFormatted < $endTimeFormatted) {
-                                    $classScheduledRoomIds[] = $classSchedule['room_id'];
-                                }
-                            }
-                        }
-                        $classScheduledRooms = count(array_unique($classScheduledRoomIds));
-                    } catch (Exception $e) {
                         $classScheduledRooms = 0;
-                    }
 
-                    $availableRooms = $totalRooms - $bookedRooms - $classScheduledRooms;
-                    $utilizationRate = $totalRooms > 0 ? round(($bookedRooms + $classScheduledRooms) / $totalRooms * 100) : 0;
-                } catch (Exception $e) {
-                    $totalRooms = 20;
-                    $availableRooms = 15;
-                    $bookedRooms = 5;
-                    $classScheduledRooms = 5;
-                    $utilizationRate = 25;
-                }
-                ?>
-                <div class="stat-card available">
-                    <div class="stat-label">Available Rooms</div>
-                    <div class="stat-value"><?php echo $availableRooms; ?></div>
-                </div>
-                <div class="stat-card occupied">
-                    <div class="stat-label">Occupied Rooms</div>
-                    <div class="stat-value"><?php echo $bookedRooms + $classScheduledRooms; ?></div>
-                </div>
-                <div class="stat-card total">
-                    <div class="stat-label">Total Rooms</div>
-                    <div class="stat-value"><?php echo $totalRooms; ?></div>
-                </div>
-                <div class="stat-card utilization">
-                    <div class="stat-label">Utilization Rate</div>
-                    <div class="stat-value"><?php echo $utilizationRate; ?>%</div>
-                </div>
-            </div>
+                        // Check for bookings
+                        try {
+                            $bookedRoomsQuery = $db->bookings->find([
+                                'booking_date' => $selectedDate,  // Use specific date instead
+                                'status' => 'approved'
+                            ]);
 
-            <!-- Room Status Overview -->
-            <div class="section-title">
-                <div class="section-title-text">Room Status Overview for <?php echo date('l, F j, Y g:i A', strtotime($selectedDateTime)); ?></div>
-            </div>
-
-            <!-- Filter Tabs -->
-            <div class="filter-tabs">
-                <div class="filter-tab active" data-filter="all">
-                    <div class="filter-tab-text">All</div>
-                </div>
-                <div class="filter-tab" data-filter="available">
-                    <div class="filter-tab-text">Available</div>
-                </div>
-                <div class="filter-tab" data-filter="occupied">
-                    <div class="filter-tab-text">Occupied</div>
-                </div>
-                <div class="filter-tab" data-filter="maintenance">
-                    <div class="filter-tab-text">Maintenance</div>
-                </div>
-            </div>
-
-            <div id="roomsContainer">
-            <?php
-            try {
-                // Get all room types from database
-                $roomTypes = $db->rooms->distinct('type');
-                
-                if (empty($roomTypes)) {
-                    $roomTypes = ['Discussion Room', 'Lecture Hall', 'Computer Lab', 'Study Room'];
-                }
-                
-                // First pass: Check which room types have available rooms
-                $roomTypesWithAvailableRooms = [];
-                
-                foreach ($roomTypes as $roomType) {
-                    // Get rooms of this type
-                    $rooms = $db->rooms->find(['type' => $roomType]);
-                    $hasAvailableRooms = false;
-                    
-                    foreach ($rooms as $room) {
-                        // Check if room is available (not under maintenance, not booked, not in class)
-                        $isAvailable = true;
-                        
-                        // Check maintenance status
-                        if (isset($room['status']) && strtolower($room['status']) === 'under maintenance') {
-                            $isAvailable = false;
-                        }
-                        
-                        if ($isAvailable) {
-                            // Check for approved bookings
-                            try {
-                                $approvedBookings = $db->bookings->find([
-                                    'room_id' => $room['_id'],
-                                    'booking_date' => $selectedDate,
-                                    'status' => 'approved'
-                                ]);
+                            $bookedRoomIds = [];
+                            foreach ($bookedRoomsQuery as $booking) {
+                                $startTime = isset($booking['start_time']) ? $booking['start_time'] : '';
+                                $endTime = isset($booking['end_time']) ? $booking['end_time'] : '';
                                 
-                                foreach ($approvedBookings as $booking) {
-                                    $startTime = isset($booking['start_time']) ? $booking['start_time'] : '';
-                                    $endTime = isset($booking['end_time']) ? $booking['end_time'] : '';
+                                if (!empty($startTime) && !empty($endTime)) {
+                                    $startTimeFormatted = date('H:i', strtotime($startTime));
+                                    $endTimeFormatted = date('H:i', strtotime($endTime));
                                     
-                                    if (!empty($startTime) && !empty($endTime)) {
-                                        $startTimeFormatted = date('H:i', strtotime($startTime));
-                                        $endTimeFormatted = date('H:i', strtotime($endTime));
-                                        
-                                        if ($selectedTimeFormatted >= $startTimeFormatted && $selectedTimeFormatted < $endTimeFormatted) {
-                                            $isAvailable = false;
-                                            break;
-                                        }
+                                    // Check if the selected time falls within the booking period
+                                    if ($selectedTimeFormatted >= $startTimeFormatted && $selectedTimeFormatted < $endTimeFormatted) {
+                                        $bookedRoomIds[] = $booking['room_id'];
                                     }
                                 }
-                            } catch (Exception $e) {
-                                // Continue checking
+                            }
+                            $bookedRooms = count(array_unique($bookedRoomIds));
+                        } catch (Exception $e) {
+                            $bookedRooms = 0;
+                        }
+
+                        // Check for class timetables
+                        try {
+                            $classTimetablesQuery = $db->class_timetable->find([
+                                'day_of_week' => $selectedDayOfWeek
+                            ]);
+
+                            $classScheduledRoomIds = [];
+                            foreach ($classTimetablesQuery as $classSchedule) {
+                                $startTime = isset($classSchedule['start_time']) ? $classSchedule['start_time'] : '';
+                                $endTime = isset($classSchedule['end_time']) ? $classSchedule['end_time'] : '';
+                                
+                                if (!empty($startTime) && !empty($endTime)) {
+                                    $startTimeFormatted = date('H:i', strtotime($startTime));
+                                    $endTimeFormatted = date('H:i', strtotime($endTime));
+                                    
+                                    // Check if the selected time falls within the class schedule
+                                    if ($selectedTimeFormatted >= $startTimeFormatted && $selectedTimeFormatted < $endTimeFormatted) {
+                                        $classScheduledRoomIds[] = $classSchedule['room_id'];
+                                    }
+                                }
+                            }
+                            $classScheduledRooms = count(array_unique($classScheduledRoomIds));
+                        } catch (Exception $e) {
+                            $classScheduledRooms = 0;
+                        }
+
+                        $availableRooms = $totalRooms - $bookedRooms - $classScheduledRooms;
+                        $utilizationRate = $totalRooms > 0 ? round(($bookedRooms + $classScheduledRooms) / $totalRooms * 100) : 0;
+                    } catch (Exception $e) {
+                        $totalRooms = 20;
+                        $availableRooms = 15;
+                        $bookedRooms = 5;
+                        $classScheduledRooms = 5;
+                        $utilizationRate = 25;
+                    }
+                    ?>
+                    <div class="stat-card available">
+                        <div class="stat-label">Available Rooms</div>
+                        <div class="stat-value"><?php echo $availableRooms; ?></div>
+                    </div>
+                    <div class="stat-card occupied">
+                        <div class="stat-label">Occupied Rooms</div>
+                        <div class="stat-value"><?php echo $bookedRooms + $classScheduledRooms; ?></div>
+                    </div>
+                    <div class="stat-card total">
+                        <div class="stat-label">Total Rooms</div>
+                        <div class="stat-value"><?php echo $totalRooms; ?></div>
+                    </div>
+                    <div class="stat-card utilization">
+                        <div class="stat-label">Utilization Rate</div>
+                        <div class="stat-value"><?php echo $utilizationRate; ?>%</div>
+                    </div>
+                </div>
+
+                <!-- Room Status Overview -->
+                <div class="section-title">
+                    <div class="section-title-text">Room Status Overview for <?php echo date('l, F j, Y g:i A', strtotime($selectedDateTime)); ?></div>
+                </div>
+
+                <!-- Filter Tabs -->
+                <div class="filter-tabs">
+                    <div class="filter-tab active" data-filter="all">
+                        <div class="filter-tab-text">All</div>
+                    </div>
+                    <div class="filter-tab" data-filter="available">
+                        <div class="filter-tab-text">Available</div>
+                    </div>
+                    <div class="filter-tab" data-filter="occupied">
+                        <div class="filter-tab-text">Occupied</div>
+                    </div>
+                    <div class="filter-tab" data-filter="maintenance">
+                        <div class="filter-tab-text">Maintenance</div>
+                    </div>
+                </div>
+
+                <div id="roomsContainer">
+                <?php
+                try {
+                    // Get all room types from database
+                    $roomTypes = $db->rooms->distinct('type');
+                    
+                    if (empty($roomTypes)) {
+                        $roomTypes = ['Discussion Room', 'Lecture Hall', 'Computer Lab', 'Study Room'];
+                    }
+                    
+                    // First pass: Check which room types have available rooms
+                    $roomTypesWithAvailableRooms = [];
+                    
+                    foreach ($roomTypes as $roomType) {
+                        // Get rooms of this type
+                        $rooms = $db->rooms->find(['type' => $roomType]);
+                        $hasAvailableRooms = false;
+                        
+                        foreach ($rooms as $room) {
+                            // Check if room is available (not under maintenance, not booked, not in class)
+                            $isAvailable = true;
+                            
+                            // Check maintenance status
+                            if (isset($room['status']) && strtolower($room['status']) === 'under maintenance') {
+                                $isAvailable = false;
                             }
                             
-                            // Check for class schedules
                             if ($isAvailable) {
+                                // Check for approved bookings
                                 try {
-                                    $classSchedules = $db->class_timetable->find([
-                                        'room_name' => $room['room_name'],  // Changed from 'room_id' => $room['_id']
-                                        'day_of_week' => $selectedDayOfWeek
+                                    $approvedBookings = $db->bookings->find([
+                                        'room_id' => $room['_id'],
+                                        'booking_date' => $selectedDate,
+                                        'status' => 'approved'
                                     ]);
                                     
-                                    foreach ($classSchedules as $classSchedule) {
-                                        $startTime = isset($classSchedule['start_time']) ? $classSchedule['start_time'] : '';
-                                        $endTime = isset($classSchedule['end_time']) ? $classSchedule['end_time'] : '';
+                                    foreach ($approvedBookings as $booking) {
+                                        $startTime = isset($booking['start_time']) ? $booking['start_time'] : '';
+                                        $endTime = isset($booking['end_time']) ? $booking['end_time'] : '';
                                         
                                         if (!empty($startTime) && !empty($endTime)) {
                                             $startTimeFormatted = date('H:i', strtotime($startTime));
@@ -265,106 +270,159 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
                                 } catch (Exception $e) {
                                     // Continue checking
                                 }
+                                
+                                // Check for class schedules
+                                if ($isAvailable) {
+                                    try {
+                                        $classSchedules = $db->class_timetable->find([
+                                            'room_name' => $room['room_name'],  // Changed from 'room_id' => $room['_id']
+                                            'day_of_week' => $selectedDayOfWeek
+                                        ]);
+                                        
+                                        foreach ($classSchedules as $classSchedule) {
+                                            $startTime = isset($classSchedule['start_time']) ? $classSchedule['start_time'] : '';
+                                            $endTime = isset($classSchedule['end_time']) ? $classSchedule['end_time'] : '';
+                                            
+                                            if (!empty($startTime) && !empty($endTime)) {
+                                                $startTimeFormatted = date('H:i', strtotime($startTime));
+                                                $endTimeFormatted = date('H:i', strtotime($endTime));
+                                                
+                                                if ($selectedTimeFormatted >= $startTimeFormatted && $selectedTimeFormatted < $endTimeFormatted) {
+                                                    $isAvailable = false;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    } catch (Exception $e) {
+                                        // Continue checking
+                                    }
+                                }
+                            }
+                            
+                            if ($isAvailable) {
+                                $hasAvailableRooms = true;
+                                break; // Found at least one available room for this type
                             }
                         }
                         
-                        if ($isAvailable) {
-                            $hasAvailableRooms = true;
-                            break; // Found at least one available room for this type
+                        if ($hasAvailableRooms) {
+                            $roomTypesWithAvailableRooms[] = $roomType;
                         }
                     }
                     
-                    if ($hasAvailableRooms) {
-                        $roomTypesWithAvailableRooms[] = $roomType;
-                    }
-                }
-                
-                // Second pass: Display only room types that have available rooms
-                foreach ($roomTypesWithAvailableRooms as $roomType) {
-                    echo '<div class="room-type-filter">';
-                    echo '<div class="room-type-tab">';
-                    echo '<div class="room-type-text">' . htmlspecialchars($roomType) . '</div>';
-                    echo '</div>';
-                    echo '</div>';
+                    // Second pass: Display only room types that have available rooms
+                    foreach ($roomTypesWithAvailableRooms as $roomType) {
+                        echo '<div class="room-type-filter">';
+                        echo '<div class="room-type-tab">';
+                        echo '<div class="room-type-text">' . htmlspecialchars($roomType) . '</div>';
+                        echo '</div>';
+                        echo '</div>';
 
-                    echo '<div class="rooms-section">';
-                    echo '<div class="rooms-container">';
-                    echo '<div class="rooms-row">';
-                    
-                    // Get rooms of this type
-                    $rooms = $db->rooms->find(['type' => $roomType]);
-                    $roomCount = 0;
-                    
-                    foreach ($rooms as $room) {
-                        // Check if the room is under maintenance
-                        if (isset($room['status']) && strtolower($room['status']) === 'under maintenance') {
-                            $statusClass = 'maintenance';
-                            $statusText = 'Under Maintenance';
-                            $bookingDetails = 'Not available';
-                            $cardClickable = false;
-                        } else {
-                            // Check if room is available at selected date/time
-                            $isAvailable = true;
-                            $bookingDetails = 'Available';
-                            $statusClass = 'available';
-                            $statusText = 'Available';
-
-                            // Query for approved bookings for this specific room and day
-                            try {
-                                $approvedBookings = $db->bookings->find([
-                                    'room_id' => $room['_id'],
-                                    'day_of_week' => $selectedDayOfWeek,
-                                    'status' => 'approved'
-                                ]);
-                                
-                                foreach ($approvedBookings as $booking) {
-                                    $startTime = isset($booking['start_time']) ? $booking['start_time'] : '';
-                                    $endTime = isset($booking['end_time']) ? $booking['end_time'] : '';
-                                    
-                                    if (!empty($startTime) && !empty($endTime)) {
-                                        $startTimeFormatted = date('H:i', strtotime($startTime));
-                                        $endTimeFormatted = date('H:i', strtotime($endTime));
-                                        
-                                        if ($selectedTimeFormatted >= $startTimeFormatted && $selectedTimeFormatted < $endTimeFormatted) {
-                                            $isAvailable = false;
-                                            $statusClass = 'booked';
-                                            $statusText = 'Booked';
-                                            $bookingDetails = 'Booked by student: ' . $startTime . ' - ' . $endTime;
-                                            break;
-                                        }
-                                    }
-                                }
-                            } catch (Exception $e) {
+                        echo '<div class="rooms-section">';
+                        echo '<div class="rooms-container">';
+                        echo '<div class="rooms-row">';
+                        
+                        // Get rooms of this type
+                        $rooms = $db->rooms->find(['type' => $roomType]);
+                        $roomCount = 0;
+                        
+                        foreach ($rooms as $room) {
+                            // Check if the room is under maintenance
+                            if (isset($room['status']) && strtolower($room['status']) === 'under maintenance') {
+                                $statusClass = 'maintenance';
+                                $statusText = 'Under Maintenance';
+                                $bookingDetails = 'Not available';
+                                $cardClickable = false;
+                            } else {
+                                // Check if room is available at selected date/time
                                 $isAvailable = true;
                                 $bookingDetails = 'Available';
-                            }
+                                $statusClass = 'available';
+                                $statusText = 'Available';
 
-                            // Check for pending bookings by current user
-                            if ($isAvailable && isset($_SESSION['student_id'])) {
+                                // Query for approved bookings for this specific room and day
                                 try {
-                                    $pendingBookings = $db->bookings->find([
+                                    $approvedBookings = $db->bookings->find([
                                         'room_id' => $room['_id'],
                                         'day_of_week' => $selectedDayOfWeek,
-                                        'status' => 'pending',
-                                        'student_id' => $_SESSION['student_id']
+                                        'status' => 'approved'
                                     ]);
                                     
-                                    foreach ($pendingBookings as $booking) {
+                                    foreach ($approvedBookings as $booking) {
                                         $startTime = isset($booking['start_time']) ? $booking['start_time'] : '';
                                         $endTime = isset($booking['end_time']) ? $booking['end_time'] : '';
                                         
                                         if (!empty($startTime) && !empty($endTime)) {
-                                            // Remove this buggy line:
-                                            // $selectedTimeFormatted = date('H:i', strtotime($selectedTimeSlot));
-                                            
-                                            // Keep these lines as they are correct:
                                             $startTimeFormatted = date('H:i', strtotime($startTime));
                                             $endTimeFormatted = date('H:i', strtotime($endTime));
                                             
                                             if ($selectedTimeFormatted >= $startTimeFormatted && $selectedTimeFormatted < $endTimeFormatted) {
-                                                $statusClass = 'requested';
-                                                $statusText = 'Requested';
-                                                $bookingDetails = 'Requested: ' . $startTime . ' - ' . $endTime;
+                                                $isAvailable = false;
+                                                $statusClass = 'booked';
+                                                $statusText = 'Booked';
+                                                $bookingDetails = 'Booked by student: ' . $startTime . ' - ' . $endTime;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                } catch (Exception $e) {
+                                    $isAvailable = true;
+                                    $bookingDetails = 'Available';
+                                }
+
+                                // Check for pending bookings by current user
+                                if ($isAvailable && isset($_SESSION['student_id'])) {
+                                    try {
+                                        $pendingBookings = $db->bookings->find([
+                                            'room_id' => $room['_id'],
+                                            'day_of_week' => $selectedDayOfWeek,
+                                            'status' => 'pending',
+                                            'student_id' => $_SESSION['student_id']
+                                        ]);
+                                        
+                                        foreach ($pendingBookings as $booking) {
+                                            $startTime = isset($booking['start_time']) ? $booking['start_time'] : '';
+                                            $endTime = isset($booking['end_time']) ? $booking['end_time'] : '';
+                                            
+                                            if (!empty($startTime) && !empty($endTime)) {
+                                                // Remove this buggy line:
+                                                // $selectedTimeFormatted = date('H:i', strtotime($selectedTimeSlot));
+                                                
+                                                // Keep these lines as they are correct:
+                                                $startTimeFormatted = date('H:i', strtotime($startTime));
+                                                $endTimeFormatted = date('H:i', strtotime($endTime));
+                                                
+                                                if ($selectedTimeFormatted >= $startTimeFormatted && $selectedTimeFormatted < $endTimeFormatted) {
+                                                    $statusClass = 'requested';
+                                                    $statusText = 'Requested';
+                                                    $bookingDetails = 'Requested: ' . $startTime . ' - ' . $endTime;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    } catch (Exception $e) {
+                                        // Do nothing, just skip
+                                    }
+                                }
+                                
+                                // Also check class_timetable for scheduled classes
+                                try {
+                                    $classSchedules = $db->class_timetable->find([
+                                        'room_id' => $room['_id'],
+                                        'day_of_week' => $selectedDayOfWeek
+                                    ]);
+                                    foreach ($classSchedules as $classSchedule) {
+                                        $startTime = isset($classSchedule['start_time']) ? $classSchedule['start_time'] : '';
+                                        $endTime = isset($classSchedule['end_time']) ? $classSchedule['end_time'] : '';
+                                        if (!empty($startTime) && !empty($endTime)) {
+                                            $startTimeFormatted = date('H:i', strtotime($startTime));
+                                            $endTimeFormatted = date('H:i', strtotime($endTime));
+                                            if ($selectedTimeFormatted >= $startTimeFormatted && $selectedTimeFormatted < $endTimeFormatted) {
+                                                $isAvailable = false;
+                                                // Around line 248, change the status class to match filter expectations
+                                                $statusClass = 'occupied'; // Instead of 'booked' for consistency
+                                                $statusText = 'Occupied';
+                                                $bookingDetails = 'Class scheduled: ' . $startTime . ' - ' . $endTime;
                                                 break;
                                             }
                                         }
@@ -372,116 +430,91 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
                                 } catch (Exception $e) {
                                     // Do nothing, just skip
                                 }
-                            }
-                            
-                            // Also check class_timetable for scheduled classes
-                            try {
-                                $classSchedules = $db->class_timetable->find([
-                                    'room_id' => $room['_id'],
-                                    'day_of_week' => $selectedDayOfWeek
-                                ]);
-                                foreach ($classSchedules as $classSchedule) {
-                                    $startTime = isset($classSchedule['start_time']) ? $classSchedule['start_time'] : '';
-                                    $endTime = isset($classSchedule['end_time']) ? $classSchedule['end_time'] : '';
-                                    if (!empty($startTime) && !empty($endTime)) {
-                                        $startTimeFormatted = date('H:i', strtotime($startTime));
-                                        $endTimeFormatted = date('H:i', strtotime($endTime));
-                                        if ($selectedTimeFormatted >= $startTimeFormatted && $selectedTimeFormatted < $endTimeFormatted) {
-                                            $isAvailable = false;
-                                            // Around line 248, change the status class to match filter expectations
-                                            $statusClass = 'occupied'; // Instead of 'booked' for consistency
-                                            $statusText = 'Occupied';
-                                            $bookingDetails = 'Class scheduled: ' . $startTime . ' - ' . $endTime;
-                                            break;
+                                
+                                if ($isAvailable && $statusClass === 'available') {
+                                    $nextTimes = [];
+
+                                    // Check bookings
+                                    $bookings = $db->bookings->find([
+                                        'room_id' => $room['_id'],
+                                        'day_of_week' => $selectedDayOfWeek,
+                                        'status' => 'approved'
+                                    ]);
+                                    foreach ($bookings as $booking) {
+                                        $startTime = isset($booking['start_time']) ? $booking['start_time'] : '';
+                                        if (!empty($startTime)) {
+                                            $startTimeFormatted = date('H:i', strtotime($startTime));
+                                            if ($startTimeFormatted > $selectedTimeFormatted) {
+                                                $nextTimes[] = $startTimeFormatted;
+                                            }
                                         }
                                     }
-                                }
-                            } catch (Exception $e) {
-                                // Do nothing, just skip
-                            }
-                            
-                            if ($isAvailable && $statusClass === 'available') {
-                                $nextTimes = [];
 
-                                // Check bookings
-                                $bookings = $db->bookings->find([
-                                    'room_id' => $room['_id'],
-                                    'day_of_week' => $selectedDayOfWeek,
-                                    'status' => 'approved'
-                                ]);
-                                foreach ($bookings as $booking) {
-                                    $startTime = isset($booking['start_time']) ? $booking['start_time'] : '';
-                                    if (!empty($startTime)) {
-                                        $startTimeFormatted = date('H:i', strtotime($startTime));
-                                        if ($startTimeFormatted > $selectedTimeFormatted) {
-                                            $nextTimes[] = $startTimeFormatted;
+                                    // Check class_timetable
+                                    $classSchedules = $db->class_timetable->find([
+                                        'room_id' => $room['_id'],
+                                        'day_of_week' => $selectedDayOfWeek
+                                    ]);
+                                    foreach ($classSchedules as $classSchedule) {
+                                        $startTime = isset($classSchedule['start_time']) ? $classSchedule['start_time'] : '';
+                                        if (!empty($startTime)) {
+                                            $startTimeFormatted = date('H:i', strtotime($startTime));
+                                            if ($startTimeFormatted > $selectedTimeFormatted) {
+                                                $nextTimes[] = $startTimeFormatted;
+                                            }
                                         }
                                     }
-                                }
 
-                                // Check class_timetable
-                                $classSchedules = $db->class_timetable->find([
-                                    'room_id' => $room['_id'],
-                                    'day_of_week' => $selectedDayOfWeek
-                                ]);
-                                foreach ($classSchedules as $classSchedule) {
-                                    $startTime = isset($classSchedule['start_time']) ? $classSchedule['start_time'] : '';
-                                    if (!empty($startTime)) {
-                                        $startTimeFormatted = date('H:i', strtotime($startTime));
-                                        if ($startTimeFormatted > $selectedTimeFormatted) {
-                                            $nextTimes[] = $startTimeFormatted;
-                                        }
+                                    if (!empty($nextTimes)) {
+                                        sort($nextTimes);
+                                        $bookingDetails = 'Available until ' . $nextTimes[0];
+                                    } else {
+                                        $bookingDetails = 'Available for the rest of the day';
                                     }
                                 }
-
-                                if (!empty($nextTimes)) {
-                                    sort($nextTimes);
-                                    $bookingDetails = 'Available until ' . $nextTimes[0];
-                                } else {
-                                    $bookingDetails = 'Available for the rest of the day';
-                                }
+                                
+                                $cardClickable = ($statusClass === 'available' || $statusClass === 'requested');
                             }
                             
-                            $cardClickable = ($statusClass === 'available' || $statusClass === 'requested');
+                            // Only add onclick if not under maintenance
+                            $onclick = ($cardClickable)
+                                ? 'onclick="bookRoom(\'' . htmlspecialchars($room['_id']) . '\')"'
+                                : '';
+                            
+                            echo '<div class="room-card ' . $statusClass . '" ' . $onclick . '>';
+                            echo '<div class="room-info">';
+                            echo '<div class="room-name clickable" onclick="viewRoomDetails(\'' . htmlspecialchars($room['_id']) . '\', event)" title="Click to view room details">' . htmlspecialchars($room['room_name']) . '</div>';
+                            echo '<div class="room-status">';
+                            echo '<div class="status-' . $statusClass . '">' . $statusText . '</div>';
+                            echo '<div class="status-details">' . $bookingDetails . '</div>';
+                            echo '</div>';
+                            echo '</div>';
+                            echo '</div>';
+                            
+                            $roomCount++;
                         }
                         
-                        // Only add onclick if not under maintenance
-                        $onclick = ($cardClickable)
-                            ? 'onclick="bookRoom(\'' . htmlspecialchars($room['_id']) . '\')"'
-                            : '';
+                        // If no rooms found for this type, show a message
+                        if ($roomCount == 0) {
+                            echo '<div class="no-rooms-message">No ' . htmlspecialchars($roomType) . ' rooms found.</div>';
+                        }
                         
-                        echo '<div class="room-card ' . $statusClass . '" ' . $onclick . '>';
-                        echo '<div class="room-info">';
-                        echo '<div class="room-name clickable" onclick="viewRoomDetails(\'' . htmlspecialchars($room['_id']) . '\', event)" title="Click to view room details">' . htmlspecialchars($room['room_name']) . '</div>';
-                        echo '<div class="room-status">';
-                        echo '<div class="status-' . $statusClass . '">' . $statusText . '</div>';
-                        echo '<div class="status-details">' . $bookingDetails . '</div>';
                         echo '</div>';
                         echo '</div>';
                         echo '</div>';
-                        
-                        $roomCount++;
                     }
                     
-                    // If no rooms found for this type, show a message
-                    if ($roomCount == 0) {
-                        echo '<div class="no-rooms-message">No ' . htmlspecialchars($roomType) . ' rooms found.</div>';
-                    }
-                    
-                    echo '</div>';
-                    echo '</div>';
-                    echo '</div>';
+                } catch (Exception $e) {
+                    echo '<div style="background: #ffebee; color: #c62828; padding: 10px; margin: 10px; border-radius: 5px;">';
+                    echo '<strong>Database Error:</strong> ' . $e->getMessage();
+                        echo '</div>';
                 }
-                
-            } catch (Exception $e) {
-                echo '<div style="background: #ffebee; color: #c62828; padding: 10px; margin: 10px; border-radius: 5px;">';
-                echo '<strong>Database Error:</strong> ' . $e->getMessage();
-                    echo '</div>';
-            }
-            ?>
+                ?>
+                </div>
             </div>
         </div>
     </div>
+    <?php include_once 'component/footer.php'; ?>
 </div>
 
 <script>
@@ -608,6 +641,4 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
         });
     }
 </script>
-
-<?php include_once 'component/footer.php'; ?>
 

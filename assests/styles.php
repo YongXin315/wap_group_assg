@@ -89,7 +89,7 @@
 
     /* Hero Section */
     .hero {
-        background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1469&q=80');
+        background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('images/Taylors.jpg');
         background-size: cover;
         background-position: center;
         height: 100vh;
@@ -101,19 +101,28 @@
         margin-top: 70px;
     }
 
-    .hero-content h1 {
-        font-size: 3.5rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    }
-
-    .hero-content p {
-        font-size: 1.2rem;
-        margin-bottom: 2rem;
-        max-width: 600px;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-    }
+    .hero-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.4);
+  }
+  .hero-container {
+      position: relative;
+      z-index: 1;
+  }
+  .hero h1 {
+      color: white;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+  }
+  .hero p {
+      color: white;
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+  }
 
     .cta-button {
         background: #dc3545;

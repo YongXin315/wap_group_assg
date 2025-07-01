@@ -7,7 +7,7 @@ if (!isset($_SESSION['student_id'])) {
     exit();
 }
 
-include 'components/header.php';
+include 'component/header.php';
 
 require_once 'db.php'; // or your DB connection
 $studentId = $_SESSION['student_id'];
@@ -326,7 +326,7 @@ $bookings = $db->bookings->find(['student_id' => $studentId]);
 </div>
 
 <?php
-include 'components/footer.php';
+include 'component/footer.php';
 ?>
 
 <script>

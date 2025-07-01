@@ -131,6 +131,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+    // Check if user already booked a discussion room on the same date
+    if (stripos($room['type'], 'Discussion Room') !== false && empty($bookingError)) {
+        $existingBooking = $db->bookings->findOne([
+            'student_id' => $studentId,
+            'booking_date' => $bookingDate,
+            'status' => ['$in' => ['approved', 'pending']],
+            // Find any discussion room
+            'room_id' => ['$in' => iterator_to_array($db->rooms->find([
+                'type' => ['$regex' => 'Discussion Room', '$options' => 'i']
+            ], ['projection' => ['_id' => 1]]))->map(fn($r) => $r['_id'])]
+        ]);
+        if ($existingBooking) {
+            $bookingError = 'You have already booked a discussion room on this date. Only one discussion room booking is allowed per day.';
+        }
+    }
     if (empty($bookingError)) {
         // Prepare booking data
         $status = (stripos($room['type'], 'Discussion Room') !== false) ? 'approved' : 'pending';
@@ -191,7 +206,14 @@ $currentDate = date('Y-m-d');
 $currentTime = date('H:i');
 
 // If both date & time are passed, use them; otherwise fall back to "now"
-$selectedDate = $_GET['date'] ?? date('Y-m-d');
+$maxBookingDate = date('Y-m-d', strtotime($currentDate . ' +6 days'));
+$selectedDateRaw = $_GET['date'] ?? date('Y-m-d');
+// If the selected date is outside the allowed range, reset to today
+if ($selectedDateRaw < $currentDate || $selectedDateRaw > $maxBookingDate) {
+    $selectedDate = $currentDate;
+} else {
+    $selectedDate = $selectedDateRaw;
+}
 $selectedTime = $_GET['time'] ?? date('H:i');
 $selectedHour      = (int) substr($selectedTime, 0, 2);
 $defaultStartTime  = sprintf('%02d:00', $selectedHour);
@@ -253,6 +275,43 @@ $onclick = ($cardClickable)
 <?php include_once 'component/header.php'; ?>
 
 <style>
+body, html {
+    min-height: 100vh;
+    height: 100%;
+}
+.page-vertical-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+.main-container {
+    flex: 1 0 auto;
+    background: white;
+    overflow: hidden;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    display: flex;
+}
+.content-wrapper {
+    width: 100%;
+    padding-left: 160px;
+    padding-right: 160px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    justify-content: center;
+    align-items: flex-start;
+    display: flex;
+}
+.content-container {
+    flex: 1 1 0;
+    max-width: 960px;
+    overflow: hidden;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    display: flex;
+}
 .summary-value.clickable {
     cursor: pointer;
     transition: all 0.3s ease;
@@ -291,187 +350,178 @@ $onclick = ($cardClickable)
 .summary-item {
     position: relative;
 }
+
+/* Remove hover effect on selected date */
+.calendar-day.selected:hover {
+    background: inherit !important;
+    color: inherit !important;
+    cursor: default !important;
+    box-shadow: none !important;
+    text-decoration: none !important;
+}
 </style>
 
-<div class="main-container confirm-booking">
-    <div class="content-wrapper confirm-booking">
-        <div class="booking-container">
-            <!-- Page Title -->
-            <div class="page-title-section">
-                <div class="page-title">Confirm Room Booking</div>
-            </div>
+<div class="page-vertical-wrapper">
+    <div class="main-container confirm-booking">
+        <div class="content-wrapper confirm-booking">
+            <div class="booking-container">
+                <!-- Page Title -->
+                <div class="page-title-section">
+                    <div class="page-title">Confirm Room Booking</div>
+                </div>
 
-            <!-- Booking Summary Section -->
-            <div class="summary-section">
-                <div class="section-title">Selected Booking Summary</div>
-                <div class="summary-content">
-                    <div class="summary-row">
-                        <div class="summary-item">
-                            <div class="summary-label">Selected Room</div>
-                            <div class="summary-value clickable" id="room-name-link">
-                                <?php echo htmlspecialchars($room['room_name']); ?>
+                <!-- Booking Summary Section -->
+                <div class="summary-section">
+                    <div class="section-title">Selected Booking Summary</div>
+                    <div class="summary-content">
+                        <div class="summary-row">
+                            <div class="summary-item">
+                                <div class="summary-label">Selected Room</div>
+                                <div class="summary-value clickable" id="room-name-link">
+                                    <?php echo htmlspecialchars($room['room_name']); ?>
+                                </div>
                             </div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-label">Selected Date</div>
-                            <div class="summary-value-container">
-                                <div class="summary-value" id="summary-date-value"><?php echo date('F j, Y', strtotime($selectedDate)); ?></div>
-                                <div class="calendar-preview" id="calendar-preview">
-                                    <div class="calendar-header">
-                                        <div class="calendar-nav" onclick="previousMonth()">‹</div>
-                                        <div class="calendar-title" id="calendar-title">Next 7 Days</div>
-                                        <div class="calendar-nav" onclick="nextMonth()">›</div>
-                                    </div>
-                                    <div class="calendar-grid">
-                                        <div class="calendar-days">
-                                            <div class="day-header">S</div>
-                                            <div class="day-header">M</div>
-                                            <div class="day-header">T</div>
-                                            <div class="day-header">W</div>
-                                            <div class="day-header">T</div>
-                                            <div class="day-header">F</div>
-                                            <div class="day-header">S</div>
-                                        </div>
-                                        <div class="calendar-week" id="calendar-dates">
-                                            <!-- Calendar dates will be populated by JavaScript -->
-                                        </div>
-                                    </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Selected Date</div>
+                                <div class="summary-value-container">
+                                    <div class="summary-value" id="summary-date-value"><?php echo date('F j, Y', strtotime($selectedDate)); ?></div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Student Details Section -->
-            <div class="student-details-section">
-                <div class="section-title">Student Details</div>
-                <div class="form-row">
+                <!-- Student Details Section -->
+                <div class="student-details-section">
+                    <div class="section-title">Student Details</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="student_id" class="form-label">Student ID</label>
+                            <input type="text" id="student_id" name="student_id" class="form-input" 
+                                   placeholder="e.g., 0312345" value="<?php echo htmlspecialchars($_SESSION['student_id'] ?? ''); ?>" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="full_name" class="form-label">Full Name</label>
+                            <input type="text" id="full_name" name="full_name" class="form-input" 
+                                   placeholder="Enter your full name" value="<?php echo htmlspecialchars($_SESSION['student_name'] ?? ''); ?>" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Booking Details Section -->
+                <div class="booking-details-section">
+                    <div class="section-title">Booking Details</div>
+                    
+                    <!-- Date Selection -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="booking_date" class="form-label">Date</label>
+                            <input type="date" id="booking_date" name="booking_date" class="form-input"
+                                   value="<?php echo htmlspecialchars($selectedDate); ?>"
+                                   min="<?php echo $currentDate; ?>"
+                                   max="<?php echo date('Y-m-d', strtotime($currentDate . ' +6 days')); ?>" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Time Selection -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="start_time" class="form-label">Start Time</label>
+                            <select id="start_time" name="start_time" class="form-select" required>
+                                <option value="">Select start time</option>
+                                <?php
+                                for ($hour = $startHour; $hour <= $endHour; $hour++) {
+                                    $time = sprintf('%02d:00', $hour);
+                                    $displayTime = date('g:i A', strtotime($time));
+                                    $selected = ($time === $defaultStartTime && $hour >= $startHour) ? 'selected' : '';
+                                    echo "<option value=\"$time\" $selected>$displayTime</option>";
+                                }
+                                ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="end_time" class="form-label">End Time</label>
+                            <select id="end_time" name="end_time" class="form-select" required>
+                                <option value="" selected>Select end time</option>
+                                <?php
+                                // End time starts from start time + 1 hour, up to closing time
+                                $defaultEndHour = min($endHour, $selectedHour + 1);
+
+                                // Generate time options from start time + 1 hour to closing time
+                                for ($hour = $defaultEndHour; $hour <= $endHour; $hour++) {
+                                    $time = sprintf('%02d:00', $hour);
+                                    $displayTime = date('g:i A', strtotime($time));
+                                    // Do NOT set selected here unless you want to pre-select a value
+                                    echo "<option value=\"$time\">$displayTime</option>";
+                                }
+                                ?>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Availability Status -->
+                    <div class="form-row">
+                        <div class="availability-status-display" id="availability-status">
+                            <div class="status-message">Select a date and time to check availability</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="purpose" class="form-label">Purpose</label>
+                            <input type="text" id="purpose" name="purpose" class="form-input" 
+                                   placeholder="Enter the Purpose" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="num_people" class="form-label">Number of People</label>
+                            <input type="number" id="num_people" name="num_people" class="form-input"
+                                min="<?php echo $minOccupancy; ?>"
+                                max="<?php echo $maxOccupancy; ?>"
+                                placeholder="Enter number of people" required>
+                            <small>Allowed: <?php echo $minOccupancy; ?> to <?php echo $maxOccupancy; ?> people</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add field for student IDs if Discussion Room -->
+                <?php if (stripos($room['type'], 'Discussion Room') !== false): ?>
+                <div class="form-row" id="student-ids-row" style="display:none;">
                     <div class="form-group">
-                        <label for="student_id" class="form-label">Student ID</label>
-                        <input type="text" id="student_id" name="student_id" class="form-input" 
-                               placeholder="e.g., 0312345" value="<?php echo htmlspecialchars($_SESSION['student_id'] ?? ''); ?>" required>
+                        <label class="form-label">Student IDs of All Attendees</label>
+                        <div id="student-ids-container"></div>
+                        <small id="student-ids-hint"></small>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="full_name" class="form-label">Full Name</label>
-                        <input type="text" id="full_name" name="full_name" class="form-input" 
-                               placeholder="Enter your full name" value="<?php echo htmlspecialchars($_SESSION['student_name'] ?? ''); ?>" required>
-                    </div>
-                </div>
-            </div>
+                <?php endif; ?>
 
-            <!-- Booking Details Section -->
-            <div class="booking-details-section">
-                <div class="section-title">Booking Details</div>
-                
-                <!-- Date Selection -->
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="booking_date" class="form-label">Date</label>
-                        <input type="date" id="booking_date" name="booking_date" class="form-input"
-                               value="<?php echo htmlspecialchars($selectedDate); ?>"
-                               min="<?php echo $currentDate; ?>" required>
+                <!-- Success/Error Messages -->
+                <?php if ($bookingMessage): ?>
+                    <div class="success-message">
+                        <?php echo htmlspecialchars($bookingMessage); ?>
                     </div>
-                </div>
-                
-                <!-- Time Selection -->
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="start_time" class="form-label">Start Time</label>
-                        <select id="start_time" name="start_time" class="form-select" required>
-                            <option value="">Select start time</option>
-                            <?php
-                            for ($hour = $startHour; $hour <= $endHour; $hour++) {
-                                $time = sprintf('%02d:00', $hour);
-                                $displayTime = date('g:i A', strtotime($time));
-                                $selected = ($time === $defaultStartTime && $hour >= $startHour) ? 'selected' : '';
-                                echo "<option value=\"$time\" $selected>$displayTime</option>";
-                            }
-                            ?>
-                        </select>
+                <?php endif; ?>
+
+                <?php if ($bookingError): ?>
+                    <div class="error-message">
+                        <?php echo htmlspecialchars($bookingError); ?>
                     </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="end_time" class="form-label">End Time</label>
-                        <select id="end_time" name="end_time" class="form-select" required>
-                            <option value="" selected>Select end time</option>
-                            <?php
-                            // End time starts from start time + 1 hour, up to closing time
-                            $defaultEndHour = min($endHour, $selectedHour + 1);
+                <?php endif; ?>
 
-                            // Generate time options from start time + 1 hour to closing time
-                            for ($hour = $defaultEndHour; $hour <= $endHour; $hour++) {
-                                $time = sprintf('%02d:00', $hour);
-                                $displayTime = date('g:i A', strtotime($time));
-                                // Do NOT set selected here unless you want to pre-select a value
-                                echo "<option value=\"$time\">$displayTime</option>";
-                            }
-                            ?>
-                        </select>
-                    </div>
+                <!-- Submit Button -->
+                <div class="submit-section">
+                    <button type="submit" class="submit-button">Submit Booking</button>
                 </div>
-                
-                <!-- Availability Status -->
-                <div class="form-row">
-                    <div class="availability-status-display" id="availability-status">
-                        <div class="status-message">Select a date and time to check availability</div>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="purpose" class="form-label">Purpose</label>
-                        <input type="text" id="purpose" name="purpose" class="form-input" 
-                               placeholder="Enter the Purpose" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="num_people" class="form-label">Number of People</label>
-                        <input type="number" id="num_people" name="num_people" class="form-input"
-                            min="<?php echo $minOccupancy; ?>"
-                            max="<?php echo $maxOccupancy; ?>"
-                            placeholder="Enter number of people" required>
-                        <small>Allowed: <?php echo $minOccupancy; ?> to <?php echo $maxOccupancy; ?> people</small>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Add field for student IDs if Discussion Room -->
-            <?php if (stripos($room['type'], 'Discussion Room') !== false): ?>
-            <div class="form-row" id="student-ids-row" style="display:none;">
-                <div class="form-group">
-                    <label class="form-label">Student IDs of All Attendees</label>
-                    <div id="student-ids-container"></div>
-                    <small id="student-ids-hint"></small>
+                <!-- Cancel Link -->
+                <div class="cancel-section">
+                    <a href="roomdetails.php?room_id=<?php echo urlencode($roomId); ?>" class="cancel-link">← Cancel</a>
                 </div>
-            </div>
-            <?php endif; ?>
-
-            <!-- Success/Error Messages -->
-            <?php if ($bookingMessage): ?>
-                <div class="success-message">
-                    <?php echo htmlspecialchars($bookingMessage); ?>
-                </div>
-            <?php endif; ?>
-
-            <?php if ($bookingError): ?>
-                <div class="error-message">
-                    <?php echo htmlspecialchars($bookingError); ?>
-                </div>
-            <?php endif; ?>
-
-            <!-- Submit Button -->
-            <div class="submit-section">
-                <button type="submit" class="submit-button">Submit Booking</button>
-            </div>
-
-            <!-- Cancel Link -->
-            <div class="cancel-section">
-                <a href="roomdetails.php?room_id=<?php echo urlencode($roomId); ?>" class="cancel-link">← Cancel</a>
             </div>
         </div>
     </div>
@@ -637,50 +687,29 @@ function updateCalendar() {
         month: 'long', 
         year: 'numeric' 
     });
-    calendarTitle.textContent = monthYear;
+    calendarTitle.textContent = 'Next 7 Days';
     
     // Generate calendar dates
     calendarDates.innerHTML = '';
     
-    // Get the first day of the month and number of days
-    const firstDay = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), 1);
-    const lastDay = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + 1, 0);
-    const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const lastAllowed = new Date(today);
+    lastAllowed.setDate(today.getDate() + 6);
     
-    // Generate 6 weeks of dates
-    for (let week = 0; week < 6; week++) {
-        const weekDiv = document.createElement('div');
-        weekDiv.className = 'calendar-week';
-        
-        for (let day = 0; day < 7; day++) {
-            const currentDate = new Date(startDate);
-            currentDate.setDate(startDate.getDate() + (week * 7) + day);
-            
-            const dayDiv = document.createElement('div');
-            const dayNumber = currentDate.getDate();
-            const isCurrentMonth = currentDate.getMonth() === currentCalendarDate.getMonth();
-            const isToday = currentDate.toDateString() === new Date().toDateString();
-            const isSelected = currentDate.toDateString() === new Date(document.getElementById('booking_date').value).toDateString();
-            const isPast = currentDate < new Date().setHours(0, 0, 0, 0);
-            
-            dayDiv.className = 'calendar-day';
-            if (!isCurrentMonth) dayDiv.className += ' other-month';
-            if (isToday) dayDiv.className += ' today';
-            if (isSelected) dayDiv.className += ' selected';
-            if (isPast) dayDiv.className += ' past';
-            
-            dayDiv.textContent = dayNumber;
-            dayDiv.onclick = function() {
-                if (!isPast) {
-                    selectCalendarDate(currentDate);
-                }
-            };
-            
-            weekDiv.appendChild(dayDiv);
-        }
-        
-        calendarDates.appendChild(weekDiv);
+    // Only show the next 7 days
+    for (let i = 0; i < 7; i++) {
+        const currentDate = new Date(today);
+        currentDate.setDate(today.getDate() + i);
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'calendar-day';
+        if (i === 0) dayDiv.className += ' today';
+        if (currentDate.toDateString() === new Date(document.getElementById('booking_date').value).toDateString()) dayDiv.className += ' selected';
+        dayDiv.textContent = currentDate.getDate();
+        dayDiv.onclick = function() {
+            selectCalendarDate(currentDate);
+        };
+        calendarDates.appendChild(dayDiv);
     }
 }
 
@@ -705,15 +734,8 @@ function selectCalendarDate(date) {
     console.log('Selected date:', dateString);
 }
 
-function previousMonth() {
-    currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
-    updateCalendar();
-}
-
-function nextMonth() {
-    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
-    updateCalendar();
-}
+function previousMonth() {}
+function nextMonth() {}
 
 // Availability checking
 function checkAvailability() {
@@ -984,4 +1006,6 @@ document.getElementById('num_people').addEventListener('input', updateStudentIdF
 // Initialize on page load if value is present
 updateStudentIdFields();
 </script>
+
+<?php include_once 'component/footer.php'; ?>
 

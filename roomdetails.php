@@ -1,12 +1,6 @@
 <?php
 session_start();
 
-// Check if user is logged in
-if (!isset($_SESSION['student_id'])) {
-    header('Location: login.php');
-    exit();
-}
-
 require_once 'db.php';
 
 // Get room ID from URL parameter

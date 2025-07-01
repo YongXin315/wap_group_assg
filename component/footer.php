@@ -2,9 +2,7 @@
 
     <!-- Footer -->
     <footer class="footer" style="background: white; color: black; text-align: center; padding: 2rem;">
-        <div class="container">
-            <p>&copy; <?php echo date('Y'); ?> Taylor's University. All rights reserved.</p>
-        </div>
+        <p>&copy; <?php echo date('Y'); ?> Taylor's University. All rights reserved.</p>
     </footer>
 
     <script>

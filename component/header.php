@@ -1,23 +1,31 @@
 <?php
 session_start();
-require_once dirname(__DIR__) . '/db.php'; // Use relative path to parent directory
 
 function isLoggedIn() {
-    return isset($_SESSION['student_id']);
+    return isset($_SESSION['student_id']) || (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin');
+}
+
+function isAdmin() {
+    return isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
 }
 
 // Get room types for filter
 $roomTypes = [];
 try {
-    $roomTypes = $db->rooms->distinct('type');
+    if (isset($db)) {
+        $roomTypes = $db->rooms->distinct('type');
+    }
 } catch (Exception $e) {
     // Handle error
     echo "<script>console.error('Error fetching room types: " . addslashes($e->getMessage()) . "');</script>";
 }
 
 $isLoggedIn = isLoggedIn();
+$isAdmin = isAdmin();
 $userName = '';
-if ($isLoggedIn && isset($_SESSION['student_name'])) {
+if ($isAdmin && isset($_SESSION['admin_name'])) {
+    $userName = $_SESSION['admin_name'];
+} elseif ($isLoggedIn && isset($_SESSION['student_name'])) {
     $userName = $_SESSION['student_name'];
 }
 ?>
@@ -35,13 +43,18 @@ if ($isLoggedIn && isset($_SESSION['student_name'])) {
     <header class="header">
         <nav class="nav-container">
             <div class="logo">
-                <div class="logo-icon">T</div>
+                <img src="images/Taylors_Logo.png" alt="Taylor's Logo">
                 <div class="logo-text">Taylor's Room Booking System</div>
             </div>
             <ul class="nav-menu">
                 <li><a href="index.php">Home</a></li>
                 <li><a href="roomavailability.php">Room Availability</a></li>
-                <?php if ($isLoggedIn): ?>
+                <?php if ($isAdmin): ?>
+                    <li><a href="admin_dashboard.php">Admin Dashboard</a></li>
+                    <li><a href="manage_bookings.php">Manage Bookings</a></li>
+                    <li><a href="#" class="btn-logout" onclick="confirmLogout()">Logout</a></li>
+                    <li class="welcome">Welcome, <?php echo htmlspecialchars($userName); ?> (Admin)</li>
+                <?php elseif ($isLoggedIn): ?>
                     <li><a href="mybookings.php">My Bookings</a></li>
                     <li><a href="#" class="btn-logout" onclick="confirmLogout()">Logout</a></li>
                     <li class="welcome">Welcome, <?php echo htmlspecialchars($userName); ?></li>
@@ -56,7 +69,7 @@ if ($isLoggedIn && isset($_SESSION['student_name'])) {
     <script>
     function confirmLogout() {
         if (confirm('Are you sure you want to logout?')) {
-            window.location.href = 'logout.php'; // Fixed: Removed '../'
+            window.location.href = 'logout.php';
         }
     }
     </script>

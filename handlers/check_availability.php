@@ -110,6 +110,46 @@ if (!$isDiscussionRoom) {
 }
 
 // Step 5: No conflicts found - slot is available
+
+// Find the next unavailable time (booking or class) after the selected end time
+$nextTimes = [];
+
+// Next booking
+$nextBooking = $db->bookings->find(
+    [
+        'room_id' => $roomId,
+        'booking_date' => $date,
+        'status' => 'approved',
+        'start_time' => ['$gt' => $endTime]
+    ],
+    ['sort' => ['start_time' => 1], 'limit' => 1]
+);
+foreach ($nextBooking as $b) {
+    $nextTimes[] = $b['start_time'];
+}
+
+// Next class (for non-discussion rooms)
+if (!$isDiscussionRoom) {
+    $dayOfWeek = date('l', strtotime($date));
+    $nextClass = $db->class_timetable->find(
+        [
+            'room_id' => $roomId,
+            'day_of_week' => $dayOfWeek,
+            'start_time' => ['$gt' => $endTime]
+        ],
+        ['sort' => ['start_time' => 1], 'limit' => 1]
+    );
+    foreach ($nextClass as $c) {
+        $nextTimes[] = $c['start_time'];
+    }
+}
+
+$availableUntil = null;
+if (!empty($nextTimes)) {
+    sort($nextTimes);
+    $availableUntil = $nextTimes[0];
+}
+
 echo json_encode([
     'available' => true,
     'message' => 'Time slot is available for booking',
@@ -117,6 +157,7 @@ echo json_encode([
         'date' => $date,
         'start_time' => $startTime,
         'end_time' => $endTime
-    ]
+    ],
+    'available_until' => $availableUntil
 ]);
 ?>
