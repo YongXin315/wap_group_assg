@@ -59,11 +59,30 @@ try {
     ];
 }
 
+// Set min/max occupancy from DB or fallback
+if (isset($room['min_occupancy'])) {
+    $minOccupancy = (int)$room['min_occupancy'];
+} elseif (stripos($room['type'], 'Discussion Room') !== false && preg_match('/(\d+)[^\d]+(\d+)/', $room['capacity'], $matches)) {
+    $minOccupancy = (int)$matches[1];
+} else {
+    $minOccupancy = 1;
+}
+
+if (isset($room['max_occupancy'])) {
+    $maxOccupancy = (int)$room['max_occupancy'];
+} elseif (stripos($room['type'], 'Discussion Room') !== false && preg_match('/(\d+)[^\d]+(\d+)/', $room['capacity'], $matches)) {
+    $maxOccupancy = (int)$matches[2];
+} else {
+    $maxOccupancy = 50;
+}
+
 $roomIdForQuery = isset($room['_id']) ? $room['_id'] : $roomId;
 
 // Handle form submission
 $bookingMessage = '';
 $bookingError = '';
+
+$isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // var_dump($_POST);
@@ -79,27 +98,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $numPeople = $_POST['num_people'] ?? '';
     $roomId = $_GET['room_id'] ?? '';
     $studentIdsRaw = $_POST['student_ids'] ?? '';
-    $studentIdsArr = array_filter(array_map('trim', preg_split('/[\s,]+/', $studentIdsRaw)));
+    // Accept both array and comma-separated string
+    if (is_array($studentIdsRaw)) {
+        $studentIdsArr = array_filter(array_map('trim', $studentIdsRaw));
+    } else {
+        $studentIdsArr = array_filter(array_map('trim', preg_split('/[\s,]+/', $studentIdsRaw)));
+    }
 
     // Validate required fields
     if (empty($studentId) || empty($fullName) || empty($bookingDate) || empty($startTime) || empty($endTime) || empty($purpose) || empty($numPeople) || empty($roomId)) {
         $bookingError = 'Please fill in all required fields.';
-    } else {
+    } else if ((int)$numPeople < $minOccupancy || (int)$numPeople > $maxOccupancy) {
+        $bookingError = 'Number of people must be between ' . $minOccupancy . ' and ' . $maxOccupancy . '.';
+    } else if (stripos($room['type'], 'Discussion Room') !== false) {
+        // Student ID validation for Discussion Room
+        $uniqueIds = array_unique($studentIdsArr);
+        if (count($studentIdsArr) < $minOccupancy || count($studentIdsArr) > $maxOccupancy) {
+            $bookingError = 'Please enter between ' . $minOccupancy . ' and ' . $maxOccupancy . ' student IDs.';
+        } else if (count($uniqueIds) !== count($studentIdsArr)) {
+            $bookingError = 'All student IDs must be unique.';
+        } else {
+            // Check if all student IDs exist in the database
+            $invalidIds = [];
+            foreach ($studentIdsArr as $sid) {
+                $exists = $db->students->findOne(['student_id' => $sid]);
+                if (!$exists) {
+                    $invalidIds[] = $sid;
+                }
+            }
+            if (!empty($invalidIds)) {
+                $bookingError = 'The following student ID(s) do not exist: ' . implode(', ', $invalidIds) . '.';
+            }
+        }
+    }
+    if (empty($bookingError)) {
         // Prepare booking data
         $status = (stripos($room['type'], 'Discussion Room') !== false) ? 'approved' : 'pending';
 
         function to12Hour($time) {
             return date('g:i A', strtotime($time));
-        }
-
-        $minOccupancy = 2; // default
-        $maxOccupancy = 8; // default
-        if (stripos($room['type'], 'Discussion Room') !== false) {
-            // Try to extract from capacity string if possible (e.g., '2-8 persons')
-            if (preg_match('/(\d+)[^\d]+(\d+)/', $room['capacity'], $matches)) {
-                $minOccupancy = (int)$matches[1];
-                $maxOccupancy = (int)$matches[2];
-            }
         }
 
         $bookingData = [
@@ -116,9 +153,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
 
         if (stripos($room['type'], 'Discussion Room') !== false) {
-            if (count($studentIdsArr) < $minOccupancy || count($studentIdsArr) > $maxOccupancy) {
-                $bookingError = 'Please enter between ' . $minOccupancy . ' and ' . $maxOccupancy . ' student IDs.';
-            }
             $bookingData['student_ids'] = $studentIdsArr;
         }
 
@@ -135,6 +169,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (Exception $e) {
             $bookingError = 'Failed to save booking: ' . $e->getMessage();
         }
+    }
+
+    if ($isAjax) {
+        if ($bookingError) {
+            echo json_encode(['success' => false, 'error' => $bookingError]);
+        } else {
+            echo json_encode([
+                'success' => true,
+                'message' => $bookingMessage,
+                'redirect' => "roomdetails.php?room_id=" . urlencode($roomId) . "&date=" . urlencode($bookingDate)
+            ]);
+        }
+        exit;
     }
 }
 
@@ -384,24 +431,22 @@ $onclick = ($cardClickable)
                 <div class="form-row">
                     <div class="form-group">
                         <label for="num_people" class="form-label">Number of People</label>
-                        <input type="number" id="num_people" name="num_people" class="form-input" 
-                            min="<?php echo (stripos($room['type'], 'Discussion Room') !== false) ? $minOccupancy : 1; ?>" 
-                            max="<?php echo (stripos($room['type'], 'Discussion Room') !== false) ? $maxOccupancy : 50; ?>" 
+                        <input type="number" id="num_people" name="num_people" class="form-input"
+                            min="<?php echo $minOccupancy; ?>"
+                            max="<?php echo $maxOccupancy; ?>"
                             placeholder="Enter number of people" required>
-                        <?php if (stripos($room['type'], 'Discussion Room') !== false): ?>
-                            <small>Allowed: <?php echo $minOccupancy; ?> to <?php echo $maxOccupancy; ?> people</small>
-                        <?php endif; ?>
+                        <small>Allowed: <?php echo $minOccupancy; ?> to <?php echo $maxOccupancy; ?> people</small>
                     </div>
                 </div>
             </div>
 
             <!-- Add field for student IDs if Discussion Room -->
             <?php if (stripos($room['type'], 'Discussion Room') !== false): ?>
-            <div class="form-row">
+            <div class="form-row" id="student-ids-row" style="display:none;">
                 <div class="form-group">
-                    <label for="student_ids" class="form-label">Student IDs of All Attendees</label>
-                    <textarea id="student_ids" name="student_ids" class="form-input" rows="3" placeholder="Enter all student IDs, one per line or comma-separated" required></textarea>
-                    <small>Enter <?php echo $minOccupancy; ?> to <?php echo $maxOccupancy; ?> student IDs (including yourself)</small>
+                    <label class="form-label">Student IDs of All Attendees</label>
+                    <div id="student-ids-container"></div>
+                    <small id="student-ids-hint"></small>
                 </div>
             </div>
             <?php endif; ?>
@@ -835,20 +880,50 @@ function bookRoom(roomId) {
 }
 
 document.querySelector('.submit-button').addEventListener('click', function(e) {
-    // Prevent the default form submission
     e.preventDefault();
 
-    // Copy all visible field values to the hidden form
-    document.getElementById('hidden_student_id').value = document.getElementById('student_id').value;
-    document.getElementById('hidden_full_name').value = document.getElementById('full_name').value;
-    document.getElementById('hidden_booking_date').value = document.getElementById('booking_date').value;
-    document.getElementById('hidden_start_time').value = document.getElementById('start_time').value;
-    document.getElementById('hidden_end_time').value = document.getElementById('end_time').value;
-    document.getElementById('hidden_purpose').value = document.getElementById('purpose').value;
-    document.getElementById('hidden_num_people').value = document.getElementById('num_people').value;
+    // Collect form data
+    const formData = new FormData();
+    formData.append('student_id', document.getElementById('student_id').value);
+    formData.append('full_name', document.getElementById('full_name').value);
+    formData.append('booking_date', document.getElementById('booking_date').value);
+    formData.append('start_time', document.getElementById('start_time').value);
+    formData.append('end_time', document.getElementById('end_time').value);
+    formData.append('purpose', document.getElementById('purpose').value);
+    formData.append('num_people', document.getElementById('num_people').value);
+    const studentIdInputs = document.querySelectorAll('input[name=\"student_ids[]\"]');
+    if (studentIdInputs.length > 0) {
+        let ids = [];
+        studentIdInputs.forEach(input => ids.push(input.value));
+        formData.append('student_ids', ids.join(','));
+    }
 
-    // Now submit the hidden form
-    document.getElementById('booking-form').submit();
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Remove old messages
+        document.querySelectorAll('.success-message, .error-message').forEach(el => el.remove());
+
+        if (data.success) {
+            alert(data.message);
+            // Optionally redirect after a delay
+            setTimeout(() => {
+                window.location.href = data.redirect;
+            }, 2000);
+        } else {
+            alert(data.error);
+            const msg = document.createElement('div');
+            msg.className = 'error-message';
+            msg.textContent = data.error;
+            document.querySelector('.booking-container').prepend(msg);
+        }
+    });
 });
 
 document.getElementById('room-name-link').addEventListener('click', function() {
@@ -876,5 +951,37 @@ function checkRoomAvailability(roomId, date, startTime, endTime, callback) {
         .then(response => response.json())
         .then(data => callback(data));
 }
+
+function updateStudentIdFields() {
+    const numPeople = parseInt(document.getElementById('num_people').value) || 0;
+    const min = <?php echo $minOccupancy; ?>;
+    const max = <?php echo $maxOccupancy; ?>;
+    const container = document.getElementById('student-ids-container');
+    const row = document.getElementById('student-ids-row');
+    const hint = document.getElementById('student-ids-hint');
+    container.innerHTML = '';
+    hint.textContent = '';
+
+    if (numPeople >= min && numPeople <= max) {
+        row.style.display = '';
+        for (let i = 1; i <= numPeople; i++) {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'student_ids[]';
+            input.className = 'form-input';
+            input.placeholder = 'Student ID ' + i;
+            input.required = true;
+            container.appendChild(input);
+        }
+        hint.textContent = `Enter ${min} to ${max} student IDs (including yourself)`;
+    } else {
+        row.style.display = 'none';
+    }
+}
+
+document.getElementById('num_people').addEventListener('input', updateStudentIdFields);
+
+// Initialize on page load if value is present
+updateStudentIdFields();
 </script>
 
