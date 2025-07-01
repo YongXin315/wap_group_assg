@@ -944,6 +944,22 @@
         word-wrap: break-word;
     }
 
+    .status-booked {
+        color: #34C759;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 21px;
+        word-wrap: break-word;
+    }
+
+    .status-requested {
+        color: #FF9500;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 21px;
+        word-wrap: break-word;
+    }
+
     .status-details {
         color: #806B6B;
         font-size: 14px;

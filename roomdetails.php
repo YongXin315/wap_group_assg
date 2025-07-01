@@ -100,41 +100,8 @@ foreach ($classSchedules as $class) {
 // Query bookings for this room and day (if you have a bookings collection)
 $bookings = $db->bookings->find([
     'room_id' => $room['_id'],
-    'day_of_week' => $selectedDayOfWeek
-]);
-foreach ($bookings as $booking) {
-    $schedule[] = [
-        'start_time' => $booking['start_time'],
-        'end_time' => $booking['end_time'],
-        'type' => 'Booking'
-    ];
-}
-
-// Sort by start_time
-usort($schedule, function($a, $b) {
-    return strcmp($a['start_time'], $b['start_time']);
-});
-// Get the day of week for the selected date
-$selectedDayOfWeek = date('l', strtotime($selectedDate));
-
-// Query class_timetable for this room and day
-$schedule = [];
-$classSchedules = $db->class_timetable->find([
-    'room_id' => $room['_id'],
-    'day_of_week' => $selectedDayOfWeek
-]);
-foreach ($classSchedules as $class) {
-    $schedule[] = [
-        'start_time' => $class['start_time'],
-        'end_time' => $class['end_time'],
-        'type' => 'Class'
-    ];
-}
-
-// Query bookings for this room and day (if you have a bookings collection)
-$bookings = $db->bookings->find([
-    'room_id' => $room['_id'],
-    'day_of_week' => $selectedDayOfWeek
+    'day_of_week' => $selectedDayOfWeek,
+    'status' => 'approved'
 ]);
 foreach ($bookings as $booking) {
     $schedule[] = [
@@ -149,16 +116,55 @@ usort($schedule, function($a, $b) {
     return strcmp($a['start_time'], $b['start_time']);
 });
 
-// Get availability for selected date
+// Get availability for selected date based on actual bookings
 $dayOfWeek = date('l', strtotime($selectedDate));
-$dayOfMonth = date('j', strtotime($selectedDate));
+$availabilityStatus = array_fill(0, 12, 'Available'); // Default all slots as available
 
-if ($dayOfWeek === 'Sunday' || $dayOfWeek === 'Saturday') {
-    $availabilityStatus = array_fill(0, 12, 'Available'); // Available on weekends
-} elseif ($dayOfMonth % 3 === 0) {
-    $availabilityStatus = ['Available', 'Booked', 'In Use', 'Available', 'Available', 'Booked', 'Booked', 'Booked', 'Booked', 'Available', 'Available', 'Booked'];
-} else {
-    $availabilityStatus = ['Available', 'Available', 'Available', 'Booked', 'Available', 'Available', 'Booked', 'Available', 'Available', 'Available', 'Available', 'Available'];
+// Check for approved bookings and pending bookings by current user
+$approvedBookings = $db->bookings->find([
+    'room_id' => $room['_id'],
+    'day_of_week' => $dayOfWeek,
+    'status' => 'approved'
+]);
+
+$pendingBookings = $db->bookings->find([
+    'room_id' => $room['_id'],
+    'day_of_week' => $dayOfWeek,
+    'status' => 'pending',
+    'student_id' => $_SESSION['student_id']
+]);
+
+// Map time slots to array indices
+$timeSlotMap = [
+    '8:00 AM - 9:00 AM' => 0, '9:00 AM - 10:00 AM' => 1, '10:00 AM - 11:00 AM' => 2, '11:00 AM - 12:00 PM' => 3,
+    '12:00 PM - 1:00 PM' => 4, '1:00 PM - 2:00 PM' => 5, '2:00 PM - 3:00 PM' => 6, '3:00 PM - 4:00 PM' => 7,
+    '4:00 PM - 5:00 PM' => 8, '5:00 PM - 6:00 PM' => 9, '6:00 PM - 7:00 PM' => 10, '7:00 PM - 8:00 PM' => 11
+];
+
+// Process approved bookings first (they take precedence)
+foreach ($approvedBookings as $booking) {
+    $startTime = isset($booking['start_time']) ? $booking['start_time'] : '';
+    $endTime = isset($booking['end_time']) ? $booking['end_time'] : '';
+    
+    if (!empty($startTime) && !empty($endTime)) {
+        $timeSlot = $startTime . ' - ' . $endTime;
+        if (isset($timeSlotMap[$timeSlot])) {
+            $availabilityStatus[$timeSlotMap[$timeSlot]] = 'Booked';
+        }
+    }
+}
+
+// Process pending bookings by current user (only if slot is still available)
+foreach ($pendingBookings as $booking) {
+    $startTime = isset($booking['start_time']) ? $booking['start_time'] : '';
+    $endTime = isset($booking['end_time']) ? $booking['end_time'] : '';
+    
+    if (!empty($startTime) && !empty($endTime)) {
+        $timeSlot = $startTime . ' - ' . $endTime;
+        if (isset($timeSlotMap[$timeSlot]) && $availabilityStatus[$timeSlotMap[$timeSlot]] === 'Available') {
+            $availabilityStatus[$timeSlotMap[$timeSlot]] = 'Requested';
+        }
+    }
 }
 
 $eveningAvailability = array_fill(0, 12, 'Available');
@@ -472,7 +478,13 @@ body {
 }
 
 .status-cell.booked .text {
-    color: #FF3B30;
+    color: #34C759;
+    font-weight: 600;
+}
+
+.status-cell.requested .text {
+    color: #FF9500;
+    font-weight: 500;
 }
 
 .status-cell.in-use .text {
@@ -762,7 +774,13 @@ body {
 }
 
 .extended-status-cell.booked .text {
-    color: #FF3B30;
+    color: #34C759;
+    font-weight: 600;
+}
+
+.extended-status-cell.requested .text {
+    color: #FF9500;
+    font-weight: 500;
 }
 
 .extended-status-cell.in-use .text {

@@ -42,7 +42,7 @@ if ($isLoggedIn && isset($_SESSION['student_name'])) {
                 <li><a href="index.php">Home</a></li>
                 <li><a href="roomavailability.php">Room Availability</a></li>
                 <?php if ($isLoggedIn): ?>
-                    <li><a href="my_bookings.php">My Bookings</a></li>
+                    <li><a href="mybookings.php">My Bookings</a></li>
                     <li><a href="#" class="btn-logout" onclick="confirmLogout()">Logout</a></li>
                     <li class="welcome">Welcome, <?php echo htmlspecialchars($userName); ?></li>
                 <?php else: ?>

@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Check if user is logged in
 if (!isset($_SESSION['student_id'])) {
@@ -19,7 +21,7 @@ if (empty($roomId)) {
 
 // Get room details from database
 try {
-    $room = $db->rooms->findOne(['room_name' => $roomId]);
+    $room = $db->rooms->findOne(['_id' => $roomId]);
     if (!$room) {
         // Fallback to static data if room not found
         $room = [
@@ -35,7 +37,7 @@ try {
         // Convert MongoDB document to array and ensure all required fields exist with fallback values
         $roomArray = $room->getArrayCopy();
         $room = array_merge([
-            'room_name' => $roomId,
+            '_id' => $roomId,
             'type' => 'Classroom',
             'block' => 'Block D',
             'floor' => 'Level 8',
@@ -57,11 +59,17 @@ try {
     ];
 }
 
+$roomIdForQuery = isset($room['_id']) ? $room['_id'] : $roomId;
+
 // Handle form submission
 $bookingMessage = '';
 $bookingError = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // var_dump($_POST);
+    // exit;
+
+    // Get form data
     $studentId = $_POST['student_id'] ?? '';
     $fullName = $_POST['full_name'] ?? '';
     $bookingDate = $_POST['booking_date'] ?? '';
@@ -69,28 +77,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $endTime = $_POST['end_time'] ?? '';
     $purpose = $_POST['purpose'] ?? '';
     $numPeople = $_POST['num_people'] ?? '';
-    
-    if (empty($studentId) || empty($fullName) || empty($bookingDate) || empty($startTime) || empty($endTime) || empty($purpose) || empty($numPeople)) {
+    $roomId = $_GET['room_id'] ?? '';
+
+    // Validate required fields
+    if (empty($studentId) || empty($fullName) || empty($bookingDate) || empty($startTime) || empty($endTime) || empty($purpose) || empty($numPeople) || empty($roomId)) {
         $bookingError = 'Please fill in all required fields.';
     } else {
-        // Here you would typically save the booking to the database
-        // For now, we'll just show a success message
-        $bookingMessage = 'Booking request submitted successfully! We will confirm your booking shortly.';
-        
-        // Redirect back to room details after 3 seconds
-        header("refresh:3;url=roomdetails.php?room_id=" . urlencode($roomId) . "&date=" . urlencode($bookingDate));
+        // Prepare booking data
+        $status = (stripos($room['type'], 'Discussion Room') !== false) ? 'approved' : 'pending';
+
+        $bookingData = [
+            'student_id' => $studentId,
+            'full_name' => $fullName,
+            'room_id' => $roomId,
+            'booking_date' => $bookingDate,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'purpose' => $purpose,
+            'num_people' => (int)$numPeople,
+            'created_at' => new MongoDB\BSON\UTCDateTime(),
+            'status' => $status
+        ];
+
+        // Optionally, add day_of_week for easier queries
+        $bookingData['day_of_week'] = date('l', strtotime($bookingDate));
+
+        try {
+            $db->bookings->insertOne($bookingData);
+            if ($status === 'approved') {
+                $bookingMessage = 'Your discussion room booking is auto-approved! You may use the room at the selected time.';
+            } else {
+                $bookingMessage = 'Booking request submitted successfully! We will confirm your booking shortly.';
+            }
+            if ($bookingMessage) {
+                header("refresh:3;url=roomdetails.php?room_id=" . urlencode($roomId) . "&date=" . urlencode($bookingDate));
+            }
+        } catch (Exception $e) {
+            $bookingError = 'Failed to save booking: ' . $e->getMessage();
+        }
     }
 }
 
-// Get current date and time
+// Set Malaysia timezone & "now"
+date_default_timezone_set('Asia/Kuala_Lumpur');
 $currentDate = date('Y-m-d');
 $currentTime = date('H:i');
+
+// If both date & time are passed, use them; otherwise fall back to "now"
 $selectedDate = $_GET['date'] ?? date('Y-m-d');
 $selectedTime = $_GET['time'] ?? date('H:i');
-
-// Extract hour from selected time for default start time
-$selectedHour = (int)date('H', strtotime($selectedTime));
-$defaultStartTime = sprintf('%02d:00', $selectedHour);
+$selectedHour      = (int) substr($selectedTime, 0, 2);
+$defaultStartTime  = sprintf('%02d:00', $selectedHour);
 
 // Get day of week for the selected date
 $selectedDayOfWeek = date('l', strtotime($selectedDate));
@@ -138,6 +175,12 @@ if (isset($_GET['time'])) {
 if ($isCurrentDate && (int)date('H') >= $endHour) {
     $startHour = $endHour; // This will result in no available times
 }
+
+$cardClickable = true; // or your actual logic
+
+$onclick = ($cardClickable)
+    ? 'onclick="bookRoom(\'' . htmlspecialchars($room['_id']) . '\')"'
+    : '';
 ?>
 
 <?php include_once 'component/header.php'; ?>
@@ -198,7 +241,9 @@ if ($isCurrentDate && (int)date('H') >= $endHour) {
                     <div class="summary-row">
                         <div class="summary-item">
                             <div class="summary-label">Selected Room</div>
-                            <div class="summary-value clickable" onclick="viewDetails('<?php echo htmlspecialchars($room['room_name']); ?>')"><?php echo htmlspecialchars($room['room_name']); ?></div>
+                            <div class="summary-value clickable" id="room-name-link">
+                                <?php echo htmlspecialchars($room['room_name']); ?>
+                            </div>
                         </div>
                         <div class="summary-item">
                             <div class="summary-label">Selected Date</div>
@@ -258,8 +303,8 @@ if ($isCurrentDate && (int)date('H') >= $endHour) {
                 <div class="form-row">
                     <div class="form-group">
                         <label for="booking_date" class="form-label">Date</label>
-                        <input type="date" id="booking_date" name="booking_date" class="form-input" 
-                               value="<?php echo htmlspecialchars($selectedDate); ?>" 
+                        <input type="date" id="booking_date" name="booking_date" class="form-input"
+                               value="<?php echo htmlspecialchars($selectedDate); ?>"
                                min="<?php echo $currentDate; ?>" required>
                     </div>
                 </div>
@@ -271,7 +316,6 @@ if ($isCurrentDate && (int)date('H') >= $endHour) {
                         <select id="start_time" name="start_time" class="form-select" required>
                             <option value="">Select start time</option>
                             <?php
-                            // Generate time options based on room type and day
                             for ($hour = $startHour; $hour <= $endHour; $hour++) {
                                 $time = sprintf('%02d:00', $hour);
                                 $displayTime = date('g:i A', strtotime($time));
@@ -286,17 +330,17 @@ if ($isCurrentDate && (int)date('H') >= $endHour) {
                     <div class="form-group">
                         <label for="end_time" class="form-label">End Time</label>
                         <select id="end_time" name="end_time" class="form-select" required>
-                            <option value="">Select end time</option>
+                            <option value="" selected>Select end time</option>
                             <?php
                             // End time starts from start time + 1 hour, up to closing time
                             $defaultEndHour = min($endHour, $selectedHour + 1);
-                            
+
                             // Generate time options from start time + 1 hour to closing time
                             for ($hour = $defaultEndHour; $hour <= $endHour; $hour++) {
                                 $time = sprintf('%02d:00', $hour);
                                 $displayTime = date('g:i A', strtotime($time));
-                                $selected = ($hour === $defaultEndHour) ? 'selected' : '';
-                                echo "<option value=\"$time\" $selected>$displayTime</option>";
+                                // Do NOT set selected here unless you want to pre-select a value
+                                echo "<option value=\"$time\">$displayTime</option>";
                             }
                             ?>
                         </select>
@@ -341,7 +385,7 @@ if ($isCurrentDate && (int)date('H') >= $endHour) {
 
             <!-- Submit Button -->
             <div class="submit-section">
-                <button type="submit" class="submit-button" form="booking-form">Submit Booking</button>
+                <button type="submit" class="submit-button">Submit Booking</button>
             </div>
 
             <!-- Cancel Link -->
@@ -352,7 +396,7 @@ if ($isCurrentDate && (int)date('H') >= $endHour) {
     </div>
 </div>
 
-<!-- Hidden Form for Submission -->
+
 <form id="booking-form" method="POST" style="display: none;">
     <input type="hidden" name="student_id" id="hidden_student_id">
     <input type="hidden" name="full_name" id="hidden_full_name">
@@ -362,9 +406,6 @@ if ($isCurrentDate && (int)date('H') >= $endHour) {
     <input type="hidden" name="purpose" id="hidden_purpose">
     <input type="hidden" name="num_people" id="hidden_num_people">
 </form>
-
-<?php include_once 'component/footer.php'; ?> 
-
 <script>
 // Auto-fill hidden form when visible inputs change
 document.getElementById('student_id').addEventListener('input', function() {
@@ -375,8 +416,7 @@ document.getElementById('full_name').addEventListener('input', function() {
     document.getElementById('hidden_full_name').value = this.value;
 });
 
-document.getElementById('booking_date').addEventListener('input', function() {
-    document.getElementById('hidden_booking_date').value = this.value;
+document.getElementById('booking_date').addEventListener('change', function() {
     updateSummaryDate();
     updateCalendar();
     checkAvailability();
@@ -625,60 +665,49 @@ function checkAvailability() {
 }
 
 function checkTimeSlotAvailability(date, startTime, endTime) {
-    // This function would typically query the database
-    // For now, we'll use the same logic as in roomdetails.php
-    
-    const dateObj = new Date(date);
-    const dayOfWeek = dateObj.getDay();
-    const dayOfMonth = dateObj.getDate();
-    
-    // Convert times to hour numbers for comparison
-    const startHour = parseInt(startTime.split(':')[0]);
-    const endHour = parseInt(endTime.split(':')[0]);
-    
-    // Sample availability logic
-    if (dayOfWeek === 0 || dayOfWeek === 6) { // Weekend
-        return true; // Available on weekends
-    } else if (dayOfMonth % 3 === 0) { // Every 3rd day has some bookings
-        // Check if the selected time range conflicts with booked times
-        const bookedHours = [9, 11, 13, 14, 15, 16, 19]; // Sample booked hours
-        for (let hour = startHour; hour < endHour; hour++) {
-            if (bookedHours.includes(hour)) {
-                return false;
-            }
-        }
-        return true;
-    } else {
-        // Check if the selected time range conflicts with booked times
-        const bookedHours = [11, 14]; // Sample booked hours
-        for (let hour = startHour; hour < endHour; hour++) {
-            if (bookedHours.includes(hour)) {
-                return false;
-            }
-        }
-        return true;
+    var roomId = "<?php echo htmlspecialchars($roomId); ?>";
+    var url = "handlers/check_availability.php?room_id=" + encodeURIComponent(roomId)
+        + "&date=" + encodeURIComponent(date)
+        + "&start_time=" + encodeURIComponent(startTime)
+        + "&end_time=" + encodeURIComponent(endTime);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url, false); // synchronous for simplicity, you can use async with callbacks/promises
+    xhr.send();
+
+    if (xhr.status === 200) {
+        var result = JSON.parse(xhr.responseText);
+        return result.available;
     }
+    return false;
 }
 
 // Initialize calendar when page loads
 document.addEventListener('DOMContentLoaded', function() {
     initializeCalendar();
-    
-    // Set default values for hidden form
+    // 1) Populate the "end_time" dropdown based on the PHP-selected start_time
+    updateEndTimeOptions();
+
+    // 2) Seed hidden fields for form submission
     document.getElementById('hidden_booking_date').value = document.getElementById('booking_date').value;
-    document.getElementById('hidden_start_time').value = document.getElementById('start_time').value;
-    document.getElementById('hidden_end_time').value = document.getElementById('end_time').value;
+    document.getElementById('hidden_start_time').value   = document.getElementById('start_time').value;
+    document.getElementById('hidden_end_time').value     = document.getElementById('end_time').value;
+
+    // 3) (Optional) Check availability immediately
+    checkAvailability();
 });
 
-document.getElementById('start_time').addEventListener('input', function() {
+// When the user picks a new start_time, rebuild end_time
+document.getElementById('start_time').addEventListener('change', function() {
     document.getElementById('hidden_start_time').value = this.value;
     updateEndTimeOptions();
     checkAvailability();
 });
 
-document.getElementById('end_time').addEventListener('input', function() {
-    document.getElementById('hidden_end_time').value = this.value;
-    checkAvailability();
+// When the user changes the date, reload the page with new params
+document.getElementById('booking_date').addEventListener('change', function() {
+    window.location.search = `room_id=${encodeURIComponent('<?php echo $roomId;?>')}` +
+                             `&date=${this.value}&time=${document.getElementById('start_time').value}`;
 });
 
 function updateEndTimeOptions() {
@@ -715,7 +744,7 @@ function updateEndTimeOptions() {
         }
         
         return { start: startHour, end: endHour };
-        }
+    }
 
     const timeRange = getTimeRange(roomType, dayOfWeek, isCurrentDate, currentHour);
     const endHour = timeRange.end;
@@ -754,16 +783,59 @@ function updateEndTimeOptions() {
     }
 }
 
-function viewDetails(roomName) {
-    // Get the selected date from the booking form
-    const selectedDate = document.getElementById('booking_date').value;
-    
-    // Redirect to room availability page with the selected date context
-    let url = 'roomavailability.php';
-    if (selectedDate) {
-        url += '?date=' + encodeURIComponent(selectedDate);
+function bookRoom(roomId) {
+    const dateInput = document.querySelector('.date-picker-input');
+    const dt = dateInput ? dateInput.value : '';
+    let url = 'booking.php?room_id=' + encodeURIComponent(roomId);
+
+    if (dt) {
+        const [date, time] = dt.split('T');
+        url += `&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`;
     }
     window.location.href = url;
+}
+
+document.querySelector('.submit-button').addEventListener('click', function(e) {
+    // Prevent the default form submission
+    e.preventDefault();
+
+    // Copy all visible field values to the hidden form
+    document.getElementById('hidden_student_id').value = document.getElementById('student_id').value;
+    document.getElementById('hidden_full_name').value = document.getElementById('full_name').value;
+    document.getElementById('hidden_booking_date').value = document.getElementById('booking_date').value;
+    document.getElementById('hidden_start_time').value = document.getElementById('start_time').value;
+    document.getElementById('hidden_end_time').value = document.getElementById('end_time').value;
+    document.getElementById('hidden_purpose').value = document.getElementById('purpose').value;
+    document.getElementById('hidden_num_people').value = document.getElementById('num_people').value;
+
+    // Now submit the hidden form
+    document.getElementById('booking-form').submit();
+});
+
+document.getElementById('room-name-link').addEventListener('click', function() {
+    // Get selected date and time from the form
+    var date = document.getElementById('booking_date').value;
+    var time = document.getElementById('start_time').value;
+    var roomId = "<?php echo urlencode($roomId); ?>";
+    var url = "roomdetails.php?room_id=" + roomId;
+    if (date) {
+        url += "&date=" + encodeURIComponent(date);
+    }
+    if (time) {
+        url += "&time=" + encodeURIComponent(time);
+    }
+    window.location.href = url;
+});
+
+function checkRoomAvailability(roomId, date, startTime, endTime, callback) {
+    var url = "handlers/check_availability.php?room_id=" + encodeURIComponent(roomId)
+        + "&date=" + encodeURIComponent(date)
+        + "&start_time=" + encodeURIComponent(startTime)
+        + "&end_time=" + encodeURIComponent(endTime);
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => callback(data));
 }
 </script>
 
