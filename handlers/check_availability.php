@@ -28,7 +28,7 @@ try {
     exit;
 }
 
-// Get room details
+// Get room details first
 $room = $db->rooms->findOne(['_id' => $roomId]);
 if (!$room) {
     echo json_encode(['available' => false, 'reason' => 'Room not found']);
@@ -76,29 +76,18 @@ if (!$isDiscussionRoom) {
     $dayOfWeek = date('l', strtotime($date)); // Get day name (Monday, Tuesday, etc.)
     
     $classConflicts = $db->class_timetable->find([
-        'room_id' => $roomId,
-        '$or' => [
-            ['date' => $date], // Specific date entries
-            ['day_of_week' => $dayOfWeek] // Recurring weekly entries
-        ]
+        'room_id' => $roomId,  // Changed from 'room_name' => $room['room_name']
+        'day_of_week' => $dayOfWeek
     ]);
     
     foreach ($classConflicts as $class) {
-        // Handle both specific date and recurring day entries
-        $classDate = isset($class['date']) ? $class['date'] : $date;
-        $classStart = $classDate . ' ' . $class['start_time'];
-        $classEnd = $classDate . ' ' . $class['end_time'];
+        $classStart = $date . ' ' . $class['start_time'];
+        $classEnd = $date . ' ' . $class['end_time'];
         
         try {
             $classStartDateTime = new DateTime($classStart);
             $classEndDateTime = new DateTime($classEnd);
             
-            // The overlap detection logic:
-            // if (($selectedStartDateTime < $classEndDateTime) && 
-            //     ($selectedEndDateTime > $classStartDateTime)) {
-            //     // Conflict detected!
-            // }
-            // Use same overlapping logic for class timetable
             if (($selectedStartDateTime < $classEndDateTime) && 
                 ($selectedEndDateTime > $classStartDateTime)) {
                 echo json_encode([

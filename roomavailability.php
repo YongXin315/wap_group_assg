@@ -87,7 +87,7 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
                     // Check for bookings
                     try {
                         $bookedRoomsQuery = $db->bookings->find([
-                            'day_of_week' => $selectedDayOfWeek,
+                            'booking_date' => $selectedDate,  // Use specific date instead
                             'status' => 'approved'
                         ]);
 
@@ -196,7 +196,91 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
                     $roomTypes = ['Discussion Room', 'Lecture Hall', 'Computer Lab', 'Study Room'];
                 }
                 
+                // First pass: Check which room types have available rooms
+                $roomTypesWithAvailableRooms = [];
+                
                 foreach ($roomTypes as $roomType) {
+                    // Get rooms of this type
+                    $rooms = $db->rooms->find(['type' => $roomType]);
+                    $hasAvailableRooms = false;
+                    
+                    foreach ($rooms as $room) {
+                        // Check if room is available (not under maintenance, not booked, not in class)
+                        $isAvailable = true;
+                        
+                        // Check maintenance status
+                        if (isset($room['status']) && strtolower($room['status']) === 'under maintenance') {
+                            $isAvailable = false;
+                        }
+                        
+                        if ($isAvailable) {
+                            // Check for approved bookings
+                            try {
+                                $approvedBookings = $db->bookings->find([
+                                    'room_id' => $room['_id'],
+                                    'booking_date' => $selectedDate,
+                                    'status' => 'approved'
+                                ]);
+                                
+                                foreach ($approvedBookings as $booking) {
+                                    $startTime = isset($booking['start_time']) ? $booking['start_time'] : '';
+                                    $endTime = isset($booking['end_time']) ? $booking['end_time'] : '';
+                                    
+                                    if (!empty($startTime) && !empty($endTime)) {
+                                        $startTimeFormatted = date('H:i', strtotime($startTime));
+                                        $endTimeFormatted = date('H:i', strtotime($endTime));
+                                        
+                                        if ($selectedTimeFormatted >= $startTimeFormatted && $selectedTimeFormatted < $endTimeFormatted) {
+                                            $isAvailable = false;
+                                            break;
+                                        }
+                                    }
+                                }
+                            } catch (Exception $e) {
+                                // Continue checking
+                            }
+                            
+                            // Check for class schedules
+                            if ($isAvailable) {
+                                try {
+                                    $classSchedules = $db->class_timetable->find([
+                                        'room_name' => $room['room_name'],  // Changed from 'room_id' => $room['_id']
+                                        'day_of_week' => $selectedDayOfWeek
+                                    ]);
+                                    
+                                    foreach ($classSchedules as $classSchedule) {
+                                        $startTime = isset($classSchedule['start_time']) ? $classSchedule['start_time'] : '';
+                                        $endTime = isset($classSchedule['end_time']) ? $classSchedule['end_time'] : '';
+                                        
+                                        if (!empty($startTime) && !empty($endTime)) {
+                                            $startTimeFormatted = date('H:i', strtotime($startTime));
+                                            $endTimeFormatted = date('H:i', strtotime($endTime));
+                                            
+                                            if ($selectedTimeFormatted >= $startTimeFormatted && $selectedTimeFormatted < $endTimeFormatted) {
+                                                $isAvailable = false;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                } catch (Exception $e) {
+                                    // Continue checking
+                                }
+                            }
+                        }
+                        
+                        if ($isAvailable) {
+                            $hasAvailableRooms = true;
+                            break; // Found at least one available room for this type
+                        }
+                    }
+                    
+                    if ($hasAvailableRooms) {
+                        $roomTypesWithAvailableRooms[] = $roomType;
+                    }
+                }
+                
+                // Second pass: Display only room types that have available rooms
+                foreach ($roomTypesWithAvailableRooms as $roomType) {
                     echo '<div class="room-type-filter">';
                     echo '<div class="room-type-tab">';
                     echo '<div class="room-type-text">' . htmlspecialchars($roomType) . '</div>';
@@ -237,22 +321,15 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
                                     $startTime = isset($booking['start_time']) ? $booking['start_time'] : '';
                                     $endTime = isset($booking['end_time']) ? $booking['end_time'] : '';
                                     
-                                    // Only check if we have valid start and end times
                                     if (!empty($startTime) && !empty($endTime)) {
-                                        // Convert times to comparable format (HH:MM)
-                                        // Fix: Replace all instances of $selectedTimeSlot with $selectedTimeFormatted
-                                        // Since $selectedTimeFormatted is already defined at the top of the file
+                                        $startTimeFormatted = date('H:i', strtotime($startTime));
+                                        $endTimeFormatted = date('H:i', strtotime($endTime));
                                         
-                                        // Current (buggy):
-                                        $selectedTimeFormatted = date('H:i', strtotime($selectedTimeSlot));
-                                        
-                                        // Should be (fixed):
-                                        // Just use the already defined $selectedTimeFormatted variable directly
                                         if ($selectedTimeFormatted >= $startTimeFormatted && $selectedTimeFormatted < $endTimeFormatted) {
                                             $isAvailable = false;
                                             $statusClass = 'booked';
                                             $statusText = 'Booked';
-                                            $bookingDetails = 'Booked: ' . $startTime . ' - ' . $endTime;
+                                            $bookingDetails = 'Booked by student: ' . $startTime . ' - ' . $endTime;
                                             break;
                                         }
                                     }
@@ -277,7 +354,10 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
                                         $endTime = isset($booking['end_time']) ? $booking['end_time'] : '';
                                         
                                         if (!empty($startTime) && !empty($endTime)) {
-                                            $selectedTimeFormatted = date('H:i', strtotime($selectedTimeSlot));
+                                            // Remove this buggy line:
+                                            // $selectedTimeFormatted = date('H:i', strtotime($selectedTimeSlot));
+                                            
+                                            // Keep these lines as they are correct:
                                             $startTimeFormatted = date('H:i', strtotime($startTime));
                                             $endTimeFormatted = date('H:i', strtotime($endTime));
                                             
@@ -308,9 +388,10 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
                                         $endTimeFormatted = date('H:i', strtotime($endTime));
                                         if ($selectedTimeFormatted >= $startTimeFormatted && $selectedTimeFormatted < $endTimeFormatted) {
                                             $isAvailable = false;
-                                            $statusClass = 'occupied';
+                                            // Around line 248, change the status class to match filter expectations
+                                            $statusClass = 'occupied'; // Instead of 'booked' for consistency
                                             $statusText = 'Occupied';
-                                            $bookingDetails = 'Booked: ' . $startTime . ' - ' . $endTime;
+                                            $bookingDetails = 'Class scheduled: ' . $startTime . ' - ' . $endTime;
                                             break;
                                         }
                                     }
@@ -463,7 +544,7 @@ $selectedTimeFormatted = date('H:i', $selectedTimestamp);  // Use this for compa
                 card.style.display = 'block';
             } else if (filter === 'available' && card.classList.contains('available')) {
                 card.style.display = 'block';
-            } else if (filter === 'occupied' && card.classList.contains('occupied')) {
+            } else if (filter === 'occupied' && (card.classList.contains('booked') || card.classList.contains('occupied'))) {
                 card.style.display = 'block';
             } else if (filter === 'maintenance' && card.classList.contains('maintenance')) {
                 card.style.display = 'block';

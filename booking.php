@@ -78,6 +78,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $purpose = $_POST['purpose'] ?? '';
     $numPeople = $_POST['num_people'] ?? '';
     $roomId = $_GET['room_id'] ?? '';
+    $studentIdsRaw = $_POST['student_ids'] ?? '';
+    $studentIdsArr = array_filter(array_map('trim', preg_split('/[\s,]+/', $studentIdsRaw)));
 
     // Validate required fields
     if (empty($studentId) || empty($fullName) || empty($bookingDate) || empty($startTime) || empty($endTime) || empty($purpose) || empty($numPeople) || empty($roomId)) {
@@ -86,11 +88,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Prepare booking data
         $status = (stripos($room['type'], 'Discussion Room') !== false) ? 'approved' : 'pending';
 
+        function to12Hour($time) {
+            return date('g:i A', strtotime($time));
+        }
+
+        $minOccupancy = 2; // default
+        $maxOccupancy = 8; // default
+        if (stripos($room['type'], 'Discussion Room') !== false) {
+            // Try to extract from capacity string if possible (e.g., '2-8 persons')
+            if (preg_match('/(\d+)[^\d]+(\d+)/', $room['capacity'], $matches)) {
+                $minOccupancy = (int)$matches[1];
+                $maxOccupancy = (int)$matches[2];
+            }
+        }
+
         $bookingData = [
             'student_id' => $studentId,
             'full_name' => $fullName,
             'room_id' => $roomId,
-            'booking_date' => $bookingDate,
+            'booking_date' => $bookingDate,  // This is sufficient!
             'start_time' => $startTime,
             'end_time' => $endTime,
             'purpose' => $purpose,
@@ -99,8 +115,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'status' => $status
         ];
 
-        // Optionally, add day_of_week for easier queries
-        $bookingData['day_of_week'] = date('l', strtotime($bookingDate));
+        if (stripos($room['type'], 'Discussion Room') !== false) {
+            if (count($studentIdsArr) < $minOccupancy || count($studentIdsArr) > $maxOccupancy) {
+                $bookingError = 'Please enter between ' . $minOccupancy . ' and ' . $maxOccupancy . ' student IDs.';
+            }
+            $bookingData['student_ids'] = $studentIdsArr;
+        }
 
         try {
             $db->bookings->insertOne($bookingData);
@@ -365,10 +385,26 @@ $onclick = ($cardClickable)
                     <div class="form-group">
                         <label for="num_people" class="form-label">Number of People</label>
                         <input type="number" id="num_people" name="num_people" class="form-input" 
-                               min="1" max="50" placeholder="Enter number of people" required>
+                            min="<?php echo (stripos($room['type'], 'Discussion Room') !== false) ? $minOccupancy : 1; ?>" 
+                            max="<?php echo (stripos($room['type'], 'Discussion Room') !== false) ? $maxOccupancy : 50; ?>" 
+                            placeholder="Enter number of people" required>
+                        <?php if (stripos($room['type'], 'Discussion Room') !== false): ?>
+                            <small>Allowed: <?php echo $minOccupancy; ?> to <?php echo $maxOccupancy; ?> people</small>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
+
+            <!-- Add field for student IDs if Discussion Room -->
+            <?php if (stripos($room['type'], 'Discussion Room') !== false): ?>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="student_ids" class="form-label">Student IDs of All Attendees</label>
+                    <textarea id="student_ids" name="student_ids" class="form-input" rows="3" placeholder="Enter all student IDs, one per line or comma-separated" required></textarea>
+                    <small>Enter <?php echo $minOccupancy; ?> to <?php echo $maxOccupancy; ?> student IDs (including yourself)</small>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <!-- Success/Error Messages -->
             <?php if ($bookingMessage): ?>
@@ -604,21 +640,24 @@ function updateCalendar() {
 }
 
 function selectCalendarDate(date) {
-    const dateString = date.toISOString().split('T')[0];
-    document.getElementById('booking_date').value = dateString;
-    document.getElementById('hidden_booking_date').value = dateString;
-    
-    // Update summary date
-    updateSummaryDate();
-    
+    // Format date as YYYY-MM-DD
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
+
+    // Reload the page with the new date parameter
+    const url = new URL(window.location);
+    url.searchParams.set('date', dateString);
+    window.history.pushState({}, '', url);
+
+    // Update the schedule for the selected date
+    updateSchedule(dateString);
+
     // Update calendar selection
     updateCalendar();
-    
-    // Update time options
-    updateTimeOptions();
-    
-    // Check availability
-    checkAvailability();
+
+    console.log('Selected date:', dateString);
 }
 
 function previousMonth() {

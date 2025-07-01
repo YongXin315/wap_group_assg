@@ -298,7 +298,15 @@ $bookings = $db->bookings->find(['student_id' => $studentId]);
             echo '<div class="table-cell" data-label="Purpose">' . htmlspecialchars($booking['purpose']) . '</div>';
             echo '<div class="table-cell" data-label="Status"><span class="' . $statusClass . '">' . ucfirst($status) . '</span></div>';
             echo '<div class="table-cell" data-label="Actions">';
-            // Add cancel button or other actions here if needed
+            
+            // Show cancel button only for pending or approved bookings
+            if ($status === 'pending' || $status === 'approved') {
+                $bookingIdStr = (string)$booking['_id'];
+                echo '<button class="cancel-button" onclick="cancelBooking(\'' . $bookingIdStr . '\')" data-booking-id="' . $bookingIdStr . '">Cancel</button>';
+            } else {
+                echo '<span style="color: #999; font-size: 12px;">-</span>';
+            }
+            
             echo '</div>';
             echo '</div>';
         }
@@ -353,5 +361,33 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalButton = document.querySelector('.stat-item');
     if (totalButton) totalButton.classList.add('active');
 });
+
+// Move the cancelBooking function inside the script tags
+function cancelBooking(bookingId) {
+    if (!confirm('Are you sure you want to cancel this booking?')) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('booking_id', bookingId);
+    
+    fetch('handlers/cancel_booking.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Booking cancelled successfully!');
+            location.reload(); // Refresh the page to show updated status
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while cancelling the booking.');
+    });
+}
 </script>
-```
+</script>

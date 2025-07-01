@@ -113,8 +113,7 @@ db.createCollection("bookings", {
         purpose: { bsonType: "string", description: "Purpose" },
         num_people: { bsonType: "int", description: "Number of people" },
         created_at: { bsonType: "date", description: "Created at" },
-        status: { bsonType: "string", description: "Booking status" },
-        day_of_week: { bsonType: "string", description: "Day of week" }
+        status: { bsonType: "string", description: "Booking status" }
       }
     }
   }

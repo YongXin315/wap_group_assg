@@ -855,8 +855,9 @@
     }
 
     .rooms-container {
-        width: 943px;
-        height: 194px;
+        width: 100%;
+        min-height: 194px;
+        height: auto;
         padding-top: 16px;
         padding-bottom: 16px;
         padding-left: 14px;
@@ -869,15 +870,19 @@
 
     .rooms-row {
         align-self: stretch;
-        height: 159px;
+        min-height: 159px;
+        height: auto;
         justify-content: flex-start;
         align-items: flex-start;
         gap: 12px;
-        display: inline-flex;
+        display: flex;
+        flex-wrap: wrap;
     }
 
     .room-card {
-        flex: 1 1 0;
+        flex: 1 1 300px;
+        min-width: 280px;
+        max-width: 350px;
         align-self: stretch;
         padding: 16px;
         background: white;

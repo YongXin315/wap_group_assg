@@ -20,10 +20,10 @@ if (empty($roomId)) {
 // Get room details from database
 try {
     $room = $db->rooms->findOne(['_id' => $roomId]);
-    $room = $db->rooms->findOne(['_id' => $roomId]);
     if (!$room) {
         // Fallback to static data if room not found
         $room = [
+            '_id' => $roomId,
             'room_name' => $roomId,
             'type' => 'Computer Lab',
             'block' => 'Block D',
@@ -36,6 +36,7 @@ try {
         // Convert MongoDB document to array and ensure all required fields exist
         $roomArray = $room->getArrayCopy();
         $room = array_merge([
+            '_id' => $roomId,
             'room_name' => $roomId,
             'type' => 'Computer Lab',
             'block' => 'Block D',
@@ -48,6 +49,7 @@ try {
 } catch (Exception $e) {
     // Fallback to static data if database error
     $room = [
+        '_id' => $roomId,
         'room_name' => $roomId,
         'type' => 'Computer Lab',
         'block' => 'Block D',
@@ -68,16 +70,16 @@ $selectedDate = $_GET['date'] ?? $currentDate;
 
 // Generate time slots for today's schedule
 $timeSlots = [
-    '8:00 AM - 9:00 AM', '9:00 AM - 10:00 AM', '10:00 AM - 11:00 AM', '11:00 AM - 12:00 PM',
-    '12:00 PM - 1:00 PM', '1:00 PM - 2:00 PM', '2:00 PM - 3:00 PM', '3:00 PM - 4:00 PM',
-    '4:00 PM - 5:00 PM', '5:00 PM - 6:00 PM', '6:00 PM - 7:00 PM', '7:00 PM - 8:00 PM'
+    '08:00 - 09:00', '09:00 - 10:00', '10:00 - 11:00', '11:00 - 12:00',
+    '12:00 - 13:00', '13:00 - 14:00', '14:00 - 15:00', '15:00 - 16:00',
+    '16:00 - 17:00', '17:00 - 18:00', '18:00 - 19:00', '19:00 - 20:00'
 ];
 
 // Generate evening time slots
 $eveningTimeSlots = [
-    '8:00 PM - 9:00 PM', '9:00 PM - 10:00 PM', '10:00 PM - 11:00 PM', '11:00 PM - 12:00 AM',
-    '12:00 AM - 1:00 AM', '1:00 AM - 2:00 AM', '2:00 AM - 3:00 AM', '3:00 AM - 4:00 AM',
-    '4:00 AM - 5:00 AM', '5:00 AM - 6:00 AM', '6:00 AM - 7:00 AM', '7:00 AM - 8:00 AM'
+    '20:00 - 21:00', '21:00 - 22:00', '22:00 - 23:00', '23:00 - 00:00',
+    '00:00 - 01:00', '01:00 - 02:00', '02:00 - 03:00', '03:00 - 04:00',
+    '04:00 - 05:00', '05:00 - 06:00', '06:00 - 07:00', '07:00 - 08:00'
 ];
 
 // Get the day of week for the selected date
@@ -86,9 +88,9 @@ $selectedDayOfWeek = date('l', strtotime($selectedDate));
 // Query class_timetable for this room and day
 $schedule = [];
 $classSchedules = $db->class_timetable->find([
-    'room_id' => $room['_id'],
+    'room_id' => $room['_id'],  // Changed from $room['room_name'] to $room['_id']
     'day_of_week' => $selectedDayOfWeek
-]);
+])->toArray();
 foreach ($classSchedules as $class) {
     $schedule[] = [
         'start_time' => $class['start_time'],
@@ -99,14 +101,17 @@ foreach ($classSchedules as $class) {
 
 // Query bookings for this room and day (if you have a bookings collection)
 $bookings = $db->bookings->find([
-    'room_id' => $room['_id'],
-    'day_of_week' => $selectedDayOfWeek,
+    'room_id' => $room['_id'],  // Fixed: now matches the field mapping used elsewhere
+    'booking_date' => $selectedDate, 
     'status' => 'approved'
-]);
+])->toArray();
 foreach ($bookings as $booking) {
+    $startTime = $booking['start_time'];
+    $endTime = $booking['end_time'];
+    $timeSlot = $startTime . ' - ' . $endTime;
     $schedule[] = [
-        'start_time' => $booking['start_time'],
-        'end_time' => $booking['end_time'],
+        'start_time' => $startTime,
+        'end_time' => $endTime,
         'type' => 'Booking'
     ];
 }
@@ -123,54 +128,134 @@ $availabilityStatus = array_fill(0, 12, 'Available'); // Default all slots as av
 // Check for approved bookings and pending bookings by current user
 $approvedBookings = $db->bookings->find([
     'room_id' => $room['_id'],
-    'day_of_week' => $dayOfWeek,
+    'booking_date' => $selectedDate,
     'status' => 'approved'
-]);
+])->toArray();
 
 $pendingBookings = $db->bookings->find([
     'room_id' => $room['_id'],
-    'day_of_week' => $dayOfWeek,
+    'booking_date' => $selectedDate,
     'status' => 'pending',
     'student_id' => $_SESSION['student_id']
-]);
+])->toArray();
 
-// Map time slots to array indices
-$timeSlotMap = [
-    '8:00 AM - 9:00 AM' => 0, '9:00 AM - 10:00 AM' => 1, '10:00 AM - 11:00 AM' => 2, '11:00 AM - 12:00 PM' => 3,
-    '12:00 PM - 1:00 PM' => 4, '1:00 PM - 2:00 PM' => 5, '2:00 PM - 3:00 PM' => 6, '3:00 PM - 4:00 PM' => 7,
-    '4:00 PM - 5:00 PM' => 8, '5:00 PM - 6:00 PM' => 9, '6:00 PM - 7:00 PM' => 10, '7:00 PM - 8:00 PM' => 11
-];
+// Mark slots as Occupied by class timetable
+foreach ($timeSlots as $idx => $slot) {
+    list($slotStart, $slotEnd) = explode(' - ', $slot);
+    $slotStartDateTime = new DateTime($selectedDate . ' ' . $slotStart);
+    $slotEndDateTime = new DateTime($selectedDate . ' ' . $slotEnd);
 
-// Process approved bookings first (they take precedence)
+    // Check for class overlap
+    foreach ($classSchedules as $class) {
+        $classStartDateTime = new DateTime($selectedDate . ' ' . $class['start_time']);
+        $classEndDateTime = new DateTime($selectedDate . ' ' . $class['end_time']);
+        if ($slotStartDateTime < $classEndDateTime && $slotEndDateTime > $classStartDateTime) {
+            $availabilityStatus[$idx] = 'Occupied';
+            break; // No need to check further if already occupied
+        }
+    }
+}
+
+// Mark slots as Booked by bookings (if not already Occupied)
+foreach ($timeSlots as $idx => $slot) {
+    if ($availabilityStatus[$idx] === 'Occupied') continue;
+    list($slotStart, $slotEnd) = explode(' - ', $slot);
+    $slotStartDateTime = new DateTime($selectedDate . ' ' . $slotStart);
+    $slotEndDateTime = new DateTime($selectedDate . ' ' . $slotEnd);
+
+    foreach ($approvedBookings as $booking) {
+        $bookingStartDateTime = new DateTime($selectedDate . ' ' . $booking['start_time']);
+        $bookingEndDateTime = new DateTime($selectedDate . ' ' . $booking['end_time']);
+        if ($slotStartDateTime < $bookingEndDateTime && $slotEndDateTime > $bookingStartDateTime) {
+            $availabilityStatus[$idx] = 'Booked';
+            break;
+        }
+    }
+}
+
+// Also process evening time slots for class schedules
+$eveningAvailability = array_fill(0, 12, 'Available');
+
+// Process evening class schedules first
+foreach ($classSchedules as $class) {
+    $classStart = isset($class['start_time']) ? $class['start_time'] : '';
+    $classEnd = isset($class['end_time']) ? $class['end_time'] : '';
+    if (!empty($classStart) && !empty($classEnd)) {
+        foreach ($eveningTimeSlots as $idx => $slot) {
+            list($slotStart, $slotEnd) = explode(' - ', $slot);
+            // If the slot and the class overlap, mark as occupied
+            if (
+                ($classStart < $slotEnd) && ($classEnd > $slotStart)
+            ) {
+                $eveningAvailability[$idx] = 'Occupied';
+            }
+        }
+    }
+}
+
+// Process evening approved bookings
 foreach ($approvedBookings as $booking) {
     $startTime = isset($booking['start_time']) ? $booking['start_time'] : '';
     $endTime = isset($booking['end_time']) ? $booking['end_time'] : '';
     
     if (!empty($startTime) && !empty($endTime)) {
         $timeSlot = $startTime . ' - ' . $endTime;
-        if (isset($timeSlotMap[$timeSlot])) {
-            $availabilityStatus[$timeSlotMap[$timeSlot]] = 'Booked';
+        if (isset($eveningTimeSlotMap[$timeSlot]) && $eveningAvailability[$eveningTimeSlotMap[$timeSlot]] !== 'Occupied') {
+            $eveningAvailability[$eveningTimeSlotMap[$timeSlot]] = 'Booked';
         }
     }
 }
 
-// Process pending bookings by current user (only if slot is still available)
+// Process evening pending bookings by current user
 foreach ($pendingBookings as $booking) {
     $startTime = isset($booking['start_time']) ? $booking['start_time'] : '';
     $endTime = isset($booking['end_time']) ? $booking['end_time'] : '';
     
     if (!empty($startTime) && !empty($endTime)) {
         $timeSlot = $startTime . ' - ' . $endTime;
-        if (isset($timeSlotMap[$timeSlot]) && $availabilityStatus[$timeSlotMap[$timeSlot]] === 'Available') {
-            $availabilityStatus[$timeSlotMap[$timeSlot]] = 'Requested';
+        if (isset($eveningTimeSlotMap[$timeSlot]) && $eveningAvailability[$eveningTimeSlotMap[$timeSlot]] === 'Available') {
+            $eveningAvailability[$eveningTimeSlotMap[$timeSlot]] = 'Requested';
         }
     }
 }
 
-$eveningAvailability = array_fill(0, 12, 'Available');
-
 // Check if room is currently available for selected date
-$isAvailable = !in_array('Booked', $availabilityStatus) && !in_array('In Use', $availabilityStatus);
+$isAvailable = true;
+if ($selectedDate === $currentDate) {
+    // Check if the current time falls within any booked/occupied slot for today
+    $currentTime = date('H:i');
+    foreach ($timeSlots as $slot) {
+        list($start, $end) = explode(' - ', $slot);
+        if ($currentTime >= $start && $currentTime < $end) {
+            $idx = array_search($slot, $timeSlots);
+            if ($availabilityStatus[$idx] === 'Booked' || $availabilityStatus[$idx] === 'Occupied') {
+                $isAvailable = false;
+                break;
+            }
+        }
+    }
+    // Also check evening slots if needed
+    foreach ($eveningTimeSlots as $slot) {
+        list($start, $end) = explode(' - ', $slot);
+        if ($currentTime >= $start && $currentTime < $end) {
+            $idx = array_search($slot, $eveningTimeSlots);
+            if ($eveningAvailability[$idx] === 'Booked' || $eveningAvailability[$idx] === 'Occupied') {
+                $isAvailable = false;
+                break;
+            }
+        }
+    }
+} else {
+    // For other dates, show available if any slot is available
+    $isAvailable = in_array('Available', $availabilityStatus) || in_array('Available', $eveningAvailability);
+}
+
+// Add this function for display conversion if not present
+if (!function_exists('to12Hour')) {
+    function to12Hour($time) {
+        return date('g:i A', strtotime($time));
+    }
+}
 ?>
 
 <?php include_once 'component/header.php'; ?>
@@ -478,7 +563,7 @@ body {
 }
 
 .status-cell.booked .text {
-    color: #34C759;
+    color: #FF3B30;
     font-weight: 600;
 }
 
@@ -774,7 +859,7 @@ body {
 }
 
 .extended-status-cell.booked .text {
-    color: #34C759;
+    color: #FF3B30;
     font-weight: 600;
 }
 
@@ -1055,7 +1140,7 @@ body {
     <!-- Extended Schedule Section -->
     <div class="extended-schedule">
         <div class="extended-schedule-title">
-            <div class="text"><?php echo date('F j, Y', strtotime($selectedDate)); ?> Booking Schedule</div>
+            <div class="text"><?php echo date('F j, Y', strtotime($selectedDate)); ?> Schedule</div>
         </div>
 
         <!-- Day Schedule -->
@@ -1064,8 +1149,9 @@ body {
                 <div class="extended-schedule-header">
                     <div class="extended-schedule-header-row">
                     <?php foreach ($timeSlots as $slot): ?>
+                            <?php list($start, $end) = explode(' - ', $slot); ?>
                             <div class="extended-time-slot-header">
-                                <div class="text"><?php echo str_replace(' - ', '<br/>-<br/>', $slot); ?></div>
+                                <div class="text"><?php echo to12Hour($start) . ' - ' . to12Hour($end); ?></div>
                             </div>
                     <?php endforeach; ?>
                 </div>
@@ -1088,8 +1174,9 @@ body {
                 <div class="extended-schedule-header">
                     <div class="extended-schedule-header-row">
                     <?php foreach ($eveningTimeSlots as $slot): ?>
+                            <?php list($start, $end) = explode(' - ', $slot); ?>
                             <div class="extended-time-slot-header">
-                                <div class="text"><?php echo str_replace(' - ', '<br/>-<br/>', $slot); ?></div>
+                                <div class="text"><?php echo to12Hour($start) . ' - ' . to12Hour($end); ?></div>
                             </div>
                     <?php endforeach; ?>
                 </div>
@@ -1243,38 +1330,16 @@ function updateCalendar() {
 }
 
 function selectCalendarDate(date) {
-    // Check if the selected date is today or in the future
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const selectedDate = new Date(date);
-    selectedDate.setHours(0, 0, 0, 0);
-    
-    // Allow selection of today or any future date (no 7-day limit)
-    if (selectedDate < today) {
-        console.log('Cannot select past date:', date);
-        return;
-    }
-    
-    selectedCalendarDate = new Date(date);
-    
     // Format date as YYYY-MM-DD without timezone issues
-    const year = selectedCalendarDate.getFullYear();
-    const month = String(selectedCalendarDate.getMonth() + 1).padStart(2, '0');
-    const day = String(selectedCalendarDate.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
     const dateString = `${year}-${month}-${day}`;
-    
-    // Update URL without page reload
+
+    // Reload the page with the new date parameter
     const url = new URL(window.location);
     url.searchParams.set('date', dateString);
-    window.history.pushState({}, '', url);
-    
-    // Update the schedule for the selected date
-    updateSchedule(dateString);
-    
-    // Update calendar selection
-    updateCalendar();
-    
-    console.log('Selected date:', dateString);
+    window.location.href = url.toString();
 }
 
 function previousMonth() {
@@ -1302,167 +1367,6 @@ function bookThisRoom(roomName) {
 
 function goBack() {
     window.location.href = 'roomavailability.php';
-}
-
-function updateSchedule(selectedDate) {
-    // Update the extended schedule section title
-    const extendedSectionTitle = document.querySelector('.extended-schedule-title .text');
-    if (extendedSectionTitle) {
-    const dateObj = new Date(selectedDate);
-    const formattedDate = dateObj.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-    });
-    extendedSectionTitle.textContent = formattedDate + ' Booking Schedule';
-    }
-    
-    // Generate new availability status based on the selected date
-    const availabilityStatus = generateAvailabilityForDate(selectedDate);
-    
-    // Update the extended schedule grid
-    updateExtendedScheduleGrid(availabilityStatus);
-    
-    // Update availability status
-    updateAvailabilityStatus(availabilityStatus);
-}
-
-function generateAvailabilityForDate(date) {
-    // This simulates the PHP logic for generating availability
-    const dateObj = new Date(date);
-    const dayOfWeek = dateObj.getDay();
-    const dayOfMonth = dateObj.getDate();
-    
-    if (dayOfWeek === 0 || dayOfWeek === 6) { // Weekend
-        return Array(12).fill('Available');
-    } else if (dayOfMonth % 3 === 0) { // Every 3rd day has some bookings
-        return ['Available', 'Booked', 'In Use', 'Available', 'Available', 'Booked', 'Booked', 'Booked', 'Booked', 'Available', 'Available', 'Booked'];
-    } else {
-        return ['Available', 'Available', 'Available', 'Booked', 'Available', 'Available', 'Booked', 'Available', 'Available', 'Available', 'Available', 'Available'];
-    }
-}
-
-function updateExtendedScheduleGrid(availabilityStatus) {
-    const extendedScheduleStatus = document.querySelector('.extended-schedule-status-row');
-    if (extendedScheduleStatus) {
-    extendedScheduleStatus.innerHTML = '';
-    
-    availabilityStatus.forEach(status => {
-        const statusCell = document.createElement('div');
-            statusCell.className = `extended-status-cell ${status.toLowerCase().replace(' ', '-')}`;
-            statusCell.innerHTML = '<div class="text">' + status + '</div>';
-        extendedScheduleStatus.appendChild(statusCell);
-    });
-}
-}
-
-function updateTimeline(availabilityStatus) {
-    const timelineContainer = document.querySelector('.timeline-container');
-    if (timelineContainer) {
-        timelineContainer.innerHTML = '';
-        
-        const timeSlots = [
-            '8:00 AM - 9:00 AM', '9:00 AM - 10:00 AM', '10:00 AM - 11:00 AM', '11:00 AM - 12:00 PM',
-            '12:00 PM - 1:00 PM', '1:00 PM - 2:00 PM', '2:00 PM - 3:00 PM', '3:00 PM - 4:00 PM',
-            '4:00 PM - 5:00 PM', '5:00 PM - 6:00 PM', '6:00 PM - 7:00 PM', '7:00 PM - 8:00 PM'
-        ];
-        
-        timeSlots.forEach((slot, index) => {
-            const timelineItem = document.createElement('div');
-            timelineItem.className = 'timeline-item';
-            timelineItem.style.alignSelf = 'stretch';
-            timelineItem.style.flex = '1 1 0';
-            timelineItem.style.justifyContent = 'flex-start';
-            timelineItem.style.alignItems = 'flex-start';
-            timelineItem.style.gap = '8px';
-            timelineItem.style.display = 'inline-flex';
-            
-            const timelineIcon = document.createElement('div');
-            timelineIcon.className = 'timeline-icon';
-            timelineIcon.style.width = '40px';
-            timelineIcon.style.alignSelf = 'stretch';
-            timelineIcon.style.paddingTop = '12px';
-            timelineIcon.style.flexDirection = 'column';
-            timelineIcon.style.justifyContent = 'flex-start';
-            timelineIcon.style.alignItems = 'center';
-            timelineIcon.style.gap = '4px';
-            timelineIcon.style.display = 'inline-flex';
-            
-            const timelineLine = document.createElement('div');
-            timelineLine.className = 'timeline-line';
-            timelineLine.style.width = '2px';
-            timelineLine.style.height = '32px';
-            timelineLine.style.background = '#E5DBDB';
-            
-            timelineIcon.appendChild(timelineLine);
-            
-            const timelineContent = document.createElement('div');
-            timelineContent.className = 'timeline-content';
-            timelineContent.style.flex = '1 1 0';
-            timelineContent.style.alignSelf = 'stretch';
-            timelineContent.style.paddingTop = '12px';
-            timelineContent.style.paddingBottom = '12px';
-            timelineContent.style.flexDirection = 'column';
-            timelineContent.style.justifyContent = 'flex-start';
-            timelineContent.style.alignItems = 'flex-start';
-            timelineContent.style.display = 'inline-flex';
-            
-            const timelineTime = document.createElement('div');
-            timelineTime.className = 'timeline-time';
-            timelineTime.style.alignSelf = 'stretch';
-            timelineTime.style.flexDirection = 'column';
-            timelineTime.style.justifyContent = 'flex-start';
-            timelineTime.style.alignItems = 'flex-start';
-            timelineTime.style.display = 'flex';
-            
-            const timeText = document.createElement('div');
-            timeText.className = 'text';
-            timeText.style.alignSelf = 'stretch';
-            timeText.style.color = '#171212';
-            timeText.style.fontSize = '16px';
-            timeText.style.fontFamily = 'Inter';
-            timeText.style.fontWeight = '500';
-            timeText.style.lineHeight = '24px';
-            timeText.style.wordWrap = 'break-word';
-            timeText.textContent = slot;
-            
-            timelineTime.appendChild(timeText);
-            
-            const timelineStatus = document.createElement('div');
-            timelineStatus.className = 'timeline-status';
-            timelineStatus.style.alignSelf = 'stretch';
-            timelineStatus.style.flexDirection = 'column';
-            timelineStatus.style.justifyContent = 'flex-start';
-            timelineStatus.style.alignItems = 'flex-start';
-            timelineStatus.style.display = 'flex';
-            
-            const statusText = document.createElement('div');
-            statusText.className = 'text';
-            statusText.style.alignSelf = 'stretch';
-            statusText.style.color = '#876363';
-            statusText.style.fontSize = '16px';
-            statusText.style.fontFamily = 'Inter';
-            statusText.style.fontWeight = '400';
-            statusText.style.lineHeight = '24px';
-            statusText.style.wordWrap = 'break-word';
-            statusText.textContent = availabilityStatus[index];
-            
-            timelineStatus.appendChild(statusText);
-            timelineContent.appendChild(timelineTime);
-            timelineContent.appendChild(timelineStatus);
-            
-            timelineItem.appendChild(timelineIcon);
-            timelineItem.appendChild(timelineContent);
-            
-            timelineContainer.appendChild(timelineItem);
-        });
-    }
-}
-
-function updateAvailabilityStatus(availabilityStatus) {
-    // Don't update the main availability status - it should always show current status
-    // The main status shows if the room is currently available today, not for selected date
-    return;
 }
 
 // Initialize calendar when page loads
