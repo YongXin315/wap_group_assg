@@ -5,7 +5,6 @@ const statusSelect = document.getElementById('status');
 const searchInput = document.getElementById('search');
 
 // Function to handle filter changes (for demonstration, logs to console)
-// In a real application, you would trigger filtering logic here
 function handleFilterChange() {
     const filters = {
         startDate: startDateInput.value,
@@ -16,9 +15,6 @@ function handleFilterChange() {
 
     console.log('Current filters:', filters);
 
-    // In a real application, you would likely:
-    // 1. Fetch data from your backend based on these filters.
-    // 2. Update the displayed list of bookings.
     /*
     fetch('/api/bookings/filter', {
         method: 'POST',
@@ -42,5 +38,5 @@ function handleFilterChange() {
 startDateInput.addEventListener('change', handleFilterChange);
 roomSelect.addEventListener('change', handleFilterChange);
 statusSelect.addEventListener('change', handleFilterChange);
-searchInput.addEventListener('input', handleFilterChange); // Use 'input' for real-time search as user types
+searchInput.addEventListener('input', handleFilterChange); 
 
