@@ -268,6 +268,47 @@ session_start();
       
       // Initialize with student mode
       updateToggleVisuals('student');
+
+      // --- Validation for login form ---
+      form.addEventListener('submit', function(e) {
+        // Get current input names (may change with mode)
+        const idInput = studentIdInput;
+        const pwInput = passwordInput;
+        const idValue = idInput.value.trim();
+        const pwValue = pwInput.value;
+        // Check for empty fields
+        if (!idValue || !pwValue) {
+          e.preventDefault();
+          alert('Please fill in all required fields.');
+          return;
+        }
+        // If input looks like an email, check email format
+        if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(idValue)) {
+          // For student: must be @sd.taylors.edu.my, for staff: allow any email
+          if (currentMode === 'student' && !/^.+@sd\.taylors\.edu\.my$/.test(idValue)) {
+            e.preventDefault();
+            alert("Student email must be a valid Taylor's email address (@sd.taylors.edu.my).");
+            return;
+          }
+        } else {
+          // Not an email
+          if (currentMode === 'student') {
+            // Student ID must be exactly 7 digits
+            if (!/^\d{7}$/.test(idValue)) {
+              e.preventDefault();
+              alert('Student ID must be exactly 7 digits.');
+              return;
+            }
+          } else {
+            // Admin ID must be numeric and at least 5 digits
+            if (!/^\d{5,}$/.test(idValue)) {
+              e.preventDefault();
+              alert('Admin ID must be numeric and at least 5 digits.');
+              return;
+            }
+          }
+        }
+      });
   });
   </script>
 

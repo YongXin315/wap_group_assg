@@ -7,11 +7,10 @@ use MongoDB\Client;
 use Dotenv\Dotenv;
 
 // Load environment variables
-$dotenv = Dotenv::createImmutable(dirname(__DIR__)); // Changed from __DIR__ to dirname(__DIR__)
+$dotenv = Dotenv::createImmutable(dirname(__DIR__));
 $dotenv->load();
 
 $mongoUri = $_ENV['MONGO_URI'] ?? '';
-
 if (!$mongoUri) {
     die("MongoDB URI is not set in the .env file.");
 }
@@ -43,7 +42,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ['student_email' => $student_email]
         ]
     ]);
-
     if ($existing) {
         die("Error: Student ID or Email already registered.");
     }
