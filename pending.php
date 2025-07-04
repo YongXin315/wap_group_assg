@@ -1,17 +1,15 @@
 <?php
 $pageTitle = "Pending Booking Requests";
-$extraCss = "style.css"; // Assuming style.css contains general site styles
+$extraCss = "style.css"; 
 include 'header.php';
 
-// Function to generate a random number of people range
+// generate a random number of people range
 function generateNumPeopleRange() {
     $ranges = ["1-10", "11-20", "21-30", "31-40", "41-50"];
     return $ranges[array_rand($ranges)];
 }
 
-// --- PHP: Simulate Data Fetching ---
-// In a real application, this data would come from a database query.
-// Each array element represents a booking request.
+// Simulate Data Fetching ---
 $pendingBookings = [
     [
         'room_name' => 'Discussion Room A',
@@ -20,52 +18,52 @@ $pendingBookings = [
         'time' => '10:00 AM - 11:00 AM',
         'student_id' => 'STU12345',
         'purpose' => 'Group Study',
-        'num_people' => generateNumPeopleRange() // New field
+        'num_people' => generateNumPeopleRange() 
     ],
     [
         'room_name' => 'Classroom B',
-        'room_type' => 'classroom', // Added for easier filtering
+        'room_type' => 'classroom', 
         'date' => '2024-07-15',
         'time' => '2:00 PM - 4:00 PM',
         'student_id' => 'STU67890',
         'purpose' => 'Project Meeting',
-        'num_people' => generateNumPeopleRange() // New field
+        'num_people' => generateNumPeopleRange() 
     ],
     [
         'room_name' => 'Discussion Room C',
-        'room_type' => 'discussion', // Added for easier filtering
+        'room_type' => 'discussion', 
         'date' => '2024-07-16',
         'time' => '11:00 AM - 12:00 PM',
         'student_id' => 'STU24680',
         'purpose' => 'Presentation Practice',
-        'num_people' => generateNumPeopleRange() // New field
+        'num_people' => generateNumPeopleRange() 
     ],
     [
         'room_name' => 'Classroom A',
-        'room_type' => 'classroom', // Added for easier filtering
+        'room_type' => 'classroom', 
         'date' => '2024-07-16',
         'time' => '1:00 PM - 3:00 PM',
         'student_id' => 'STU13579',
         'purpose' => 'Study Session',
-        'num_people' => generateNumPeopleRange() // New field
+        'num_people' => generateNumPeopleRange() 
     ],
     [
         'room_name' => 'Computer Lab 1',
-        'room_type' => 'computer_lab', // Added for easier filtering
+        'room_type' => 'computer_lab', 
         'date' => '2024-07-17',
         'time' => '09:00 AM - 10:00 AM',
         'student_id' => 'STU97531',
         'purpose' => 'Programming Practice',
-        'num_people' => generateNumPeopleRange() // New field
+        'num_people' => generateNumPeopleRange() 
     ],
     [
         'room_name' => 'Discussion Room D',
-        'room_type' => 'discussion', // Added for easier filtering
+        'room_type' => 'discussion', 
         'date' => '2024-07-17',
         'time' => '01:00 PM - 02:00 PM',
         'student_id' => 'STU54321',
         'purpose' => 'Brainstorming',
-        'num_people' => generateNumPeopleRange() // New field
+        'num_people' => generateNumPeopleRange() 
     ]
 ];
 ?>
@@ -79,10 +77,10 @@ $pendingBookings = [
     <?php if (isset($extraCss)) { echo "<link rel='stylesheet' href='$extraCss'>"; } ?>
 
     <style>
-        /* General layout for the main content area */
+        /* main content area */
         .main-content-container {
             align-self: stretch;
-            height: 753px; /* Consider making this flexible or controlled by content */
+            height: 753px; 
             background: white;
             flex-direction: column;
             justify-content: flex-start;
@@ -93,7 +91,7 @@ $pendingBookings = [
         .inner-content-wrapper {
             align-self: stretch;
             flex: 1 1 0;
-            padding: 20px 160px; /* Combined padding-left/right/top/bottom */
+            padding: 20px 160px; 
             justify-content: center;
             align-items: flex-start;
             display: inline-flex;
@@ -135,16 +133,16 @@ $pendingBookings = [
             font-weight: 700;
             line-height: 40px;
             word-wrap: break-word;
-            margin: 0; /* Reset default h1 margin */
+            margin: 0; 
         }
 
-        /* Filter Section (no search bar) */
+        /* Filter Section */
         .filter-search-section {
             max-width: 960px;
             padding: 12px 16px;
-            justify-content: flex-start; /* Align dropdown to the left */
+            justify-content: flex-start; 
             align-items: flex-end;
-            gap: 16px; /* Still useful if you add more filters later */
+            gap: 16px; 
             display: flex;
             flex-wrap: wrap;
             align-content: flex-end;
@@ -153,9 +151,9 @@ $pendingBookings = [
         }
 
         .filter-dropdown-container {
-            flex-grow: 0; /* Don't let it grow to fill space */
+            flex-grow: 0; 
             min-width: 250px;
-            max-width: 448px; /* Maintain consistent max-width as before */
+            max-width: 448px; 
         }
 
         .room-type-select {
@@ -192,10 +190,10 @@ $pendingBookings = [
         .booking-table-wrapper {
             align-self: stretch;
             background: white;
-            overflow: hidden; /* For rounded corners */
+            overflow: hidden; 
             border-radius: 12px;
             border: 1px #E5D1D1 solid;
-            display: flex; /* Using flex for the overall table structure */
+            display: flex; 
             flex-direction: column;
             width: 100%;
         }
@@ -222,7 +220,7 @@ $pendingBookings = [
             font-weight: 500;
             line-height: 21px;
             word-wrap: break-word;
-            flex-shrink: 0; /* Prevent shrinking below content */
+            flex-shrink: 0; 
         }
 
         /* Updated widths for table headers */
@@ -270,7 +268,7 @@ $pendingBookings = [
             font-weight: 400;
             line-height: 21px;
             word-wrap: break-word;
-            flex-shrink: 0; /* Prevent shrinking below content */
+            flex-shrink: 0; 
         }
 
         /* Updated widths for booking cells */
@@ -296,7 +294,7 @@ $pendingBookings = [
             line-height: 21px;
             word-wrap: break-word;
             flex-shrink: 0;
-            cursor: pointer; /* Indicate clickable */
+            cursor: pointer; 
         }
 
         .approve-btn {
@@ -312,7 +310,6 @@ $pendingBookings = [
             display: none !important;
         }
 
-        /* Modal Styling for custom alerts/confirms */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -400,13 +397,12 @@ $pendingBookings = [
         }
 
 
-        /* Responsive adjustments (optional, but good practice) */
         @media (max-width: 1024px) {
             .inner-content-wrapper {
                 padding: 20px 80px;
             }
             .filter-search-section {
-                flex-direction: column; /* Stack filters on smaller screens */
+                flex-direction: column; 
                 align-items: flex-start;
                 gap: 10px;
             }
@@ -420,15 +416,15 @@ $pendingBookings = [
                 padding: 10px 20px;
             }
             .table-header, .booking-row {
-                flex-wrap: wrap; /* Allow cells to wrap if content is too wide */
-                height: auto; /* Auto height for wrapping content */
+                flex-wrap: wrap; 
+                height: auto; 
             }
             .table-header-cell, .booking-cell, .action-cell {
-                width: auto; /* Let content dictate width more */
-                flex-basis: auto; /* Reset flex basis */
-                min-width: 80px; /* Ensure some minimum width */
+                width: auto; 
+                flex-basis: auto; 
+                min-width: 80px; 
             }
-            /* Adjust specific column widths for smaller screens */
+           
             .table-header-cell:nth-child(1),
             .booking-cell:nth-child(1) { flex-basis: 45%; } /* Room Name */
             .table-header-cell:nth-child(2),
@@ -443,7 +439,7 @@ $pendingBookings = [
             .booking-cell:nth-child(6) { flex-basis: 95%; } /* Number of People */
             .table-header-cell:nth-child(7),
             .action-cell {
-                flex-basis: 48%; /* Adjust action buttons */
+                flex-basis: 48%; 
             }
         }
     </style>
@@ -545,7 +541,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Function to show the custom confirmation modal
+    // show the custom confirmation
     function showConfirmationModal(title, message, onConfirm) {
         modalTitle.textContent = title;
         modalMessage.textContent = message;
@@ -557,51 +553,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
         modalConfirmBtn.onclick = function() {
             confirmationModal.classList.remove('show');
-            onConfirm(true); // Execute the provided callback with true
+            onConfirm(true); 
         };
 
         modalCancelBtn.onclick = function() {
             confirmationModal.classList.remove('show');
-            onConfirm(false); // Execute the provided callback with false
+            onConfirm(false); 
         };
     }
 
-    // Handle Approve/Reject actions
+    // Handle Approve/Reject 
     document.getElementById('bookingTableBody').addEventListener('click', function(event) {
         const target = event.target;
-        // Check if the clicked element is an approve or reject button
+        
         if (target.classList.contains('approve-btn') || target.classList.contains('reject-btn')) {
             const bookingRow = target.closest('.booking-row');
-            if (!bookingRow) return; // Should not happen if logic is correct
+            if (!bookingRow) return; 
 
-            // NOTE: The 'id' field was removed from PHP data, so bookingId will be undefined.
-            // If you need a unique identifier for AJAX, you'll need to add one to the data,
-            // perhaps by using an array index or generating a temporary ID for pending requests.
-            // For now, I'm removing the `bookingId` variable and related message part.
-            // If a real database ID is needed, it would come from a data attribute on the row.
-            // For this example, we'll just log and remove the row.
-            const action = target.getAttribute('data-action'); // 'approve' or 'reject'
+        
+            const action = target.getAttribute('data-action'); 
 
-            currentActionRow = bookingRow; // Store reference to the row
+            currentActionRow = bookingRow; 
 
             let title = '';
             let message = '';
 
             if (action === 'approve') {
                 title = 'Approve Booking?';
-                message = `Are you sure you want to approve this booking?`; // Removed ID
+                message = `Are you sure you want to approve this booking?`; 
             } else if (action === 'reject') {
                 title = 'Reject Booking?';
-                message = `Are you sure you want to reject this booking? This action cannot be undone.`; // Removed ID
+                message = `Are you sure you want to reject this booking? This action cannot be undone.`; 
             }
 
             showConfirmationModal(title, message, function(confirmed) {
                 if (confirmed) {
                     // User confirmed the action
                     console.log(`${action.toUpperCase()} action confirmed for this booking.`);
-                    // In a real application, you would send an AJAX request here
-                    // You might need to pass other booking details (e.g., student ID, room, date)
-                    // if you no longer have a unique 'booking_id' on the client side.
                     /*
                     fetch('process_booking.php', {
                         method: 'POST',
@@ -636,24 +624,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                     */
 
-                    // For demonstration, just remove the row immediately
                     if (currentActionRow) {
                         currentActionRow.remove();
                         currentActionRow = null;
                     }
                 } else {
                     console.log(`Action for this booking cancelled.`);
-                    currentActionRow = null; // Clear the reference
+                    currentActionRow = null; 
                 }
             });
         }
     });
 
 
-    // Add event listener for filter dropdown
-    roomTypeFilter.addEventListener('change', filterBookings);
 
-    // Initial filter on page load
+    roomTypeFilter.addEventListener('change', filterBookings);
     filterBookings();
 });
 </script>
