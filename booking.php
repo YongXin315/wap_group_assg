@@ -549,9 +549,10 @@ document.getElementById('full_name').addEventListener('input', function() {
 
 document.getElementById('booking_date').addEventListener('change', function() {
     updateSummaryDate();
-    updateCalendar();
-    checkAvailability();
+    // updateCalendar(); // <-- comment this out if not needed
     updateTimeOptions();
+    updateEndTimeOptions();
+    checkAvailability();
 });
 
 function updateSummaryDate() {
@@ -568,6 +569,7 @@ function updateSummaryDate() {
 }
 
 function updateTimeOptions() {
+    console.log('updateTimeOptions called');
     const selectedDate = document.getElementById('booking_date').value;
     const currentDate = new Date().toISOString().split('T')[0];
     const currentHour = new Date().getHours();
@@ -681,6 +683,7 @@ function initializeCalendar() {
 function updateCalendar() {
     const calendarDates = document.getElementById('calendar-dates');
     const calendarTitle = document.getElementById('calendar-title');
+    if (!calendarTitle) return; // Prevent error if element is missing
     
     // Update title
     const monthYear = currentCalendarDate.toLocaleDateString('en-US', { 
@@ -808,12 +811,6 @@ document.getElementById('start_time').addEventListener('change', function() {
     document.getElementById('hidden_start_time').value = this.value;
     updateEndTimeOptions();
     checkAvailability();
-});
-
-// When the user changes the date, reload the page with new params
-document.getElementById('booking_date').addEventListener('change', function() {
-    window.location.search = `room_id=${encodeURIComponent('<?php echo $roomId;?>')}` +
-                             `&date=${this.value}&time=${document.getElementById('start_time').value}`;
 });
 
 function updateEndTimeOptions() {
