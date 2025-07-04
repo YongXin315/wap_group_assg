@@ -165,12 +165,7 @@ session_start();
   error_reporting(E_ALL);
   ?>
 
-  <?php if (isset($_SESSION['error'])): ?>
-    <div style="color: red; margin-bottom: 1rem;">
-      <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
-    </div>
-  <?php endif; ?>
-
+  
   <div class="login-wrapper">
     <div class="login-form-container">
       <h2 class="login-title">Welcome to<br>Taylor's Room Booking System!</h2>
@@ -270,6 +265,13 @@ session_start();
       updateToggleVisuals('student');
   });
   </script>
+
+  <?php if (isset($_SESSION['error'])): ?>
+    <div style="color: red; margin-bottom: 1rem;">
+      <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
+    </div>
+  <?php endif; ?>
+
 
   <?php include_once 'component/footer.php'; ?>
 </body>

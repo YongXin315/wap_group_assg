@@ -47,18 +47,21 @@ if ($isAdmin && isset($_SESSION['admin_name'])) {
                 <div class="logo-text">Taylor's Room Booking System</div>
             </div>
             <ul class="nav-menu">
-                <li><a href="index.php">Home</a></li>
-                <li><a href="roomavailability.php">Room Availability</a></li>
                 <?php if ($isAdmin): ?>
-                    <li><a href="admin_dashboard.php">Admin Dashboard</a></li>
-                    <li><a href="manage_bookings.php">Manage Bookings</a></li>
+                    <li><a href="admin_dashboard.php">Dashboard</a></li>
+                    <li><a href="admin_view_request.php">View Pending Requests</a></li>
+                    <li><a href="admin_manage_rooms.php">Manage Rooms</a></li>
                     <li><a href="#" class="btn-logout" onclick="confirmLogout()">Logout</a></li>
                     <li class="welcome">Welcome, <?php echo htmlspecialchars($userName); ?> (Admin)</li>
                 <?php elseif ($isLoggedIn): ?>
+                    <li><a href="index.php">Home</a></li>
+                    <li><a href="roomavailability.php">Room Availability</a></li>
                     <li><a href="mybookings.php">My Bookings</a></li>
                     <li><a href="#" class="btn-logout" onclick="confirmLogout()">Logout</a></li>
                     <li class="welcome">Welcome, <?php echo htmlspecialchars($userName); ?></li>
                 <?php else: ?>
+                    <li><a href="index.php">Home</a></li>
+                    <li><a href="roomavailability.php">Room Availability</a></li>
                     <li><a href="signup.php">Sign Up</a></li>
                     <li><a href="login.php" class="btn-login">Login</a></li>
                 <?php endif; ?>
