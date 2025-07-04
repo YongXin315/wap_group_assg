@@ -215,32 +215,30 @@ foreach ($pendingBookings as $booking) {
 
 // Check if room is currently available for selected date
 $isAvailable = true;
+date_default_timezone_set('Asia/Kuala_Lumpur');
+$currentDate = date('Y-m-d');
+$currentTime = date('H:i');
+$currentDateTime = new DateTime("$currentDate $currentTime");
+
+function normalizeTime($time) {
+    $parts = explode(':', $time);
+    return sprintf('%02d:%02d', (int)$parts[0], (int)($parts[1] ?? 0));
+}
+
 if ($selectedDate === $currentDate) {
-    // Check if the current time falls within any booked/occupied slot for today
-    $currentTime = date('H:i');
-    foreach ($timeSlots as $slot) {
-        list($start, $end) = explode(' - ', $slot);
-        if ($currentTime >= $start && $currentTime < $end) {
-            $idx = array_search($slot, $timeSlots);
-            if ($availabilityStatus[$idx] === 'Booked' || $availabilityStatus[$idx] === 'Occupied') {
-                $isAvailable = false;
-                break;
-            }
-        }
-    }
-    // Also check evening slots if needed
-    foreach ($eveningTimeSlots as $slot) {
-        list($start, $end) = explode(' - ', $slot);
-        if ($currentTime >= $start && $currentTime < $end) {
-            $idx = array_search($slot, $eveningTimeSlots);
-            if ($eveningAvailability[$idx] === 'Booked' || $eveningAvailability[$idx] === 'Occupied') {
-                $isAvailable = false;
-                break;
-            }
+    // Check bookings and class schedules in a single loop
+    foreach (array_merge($approvedBookings, $classSchedules) as $entry) {
+        $startField = isset($entry['booking_date']) ? $entry['start_time'] : $entry['start_time'];
+        $endField = isset($entry['booking_date']) ? $entry['end_time'] : $entry['end_time'];
+        $dateField = isset($entry['booking_date']) ? $entry['booking_date'] : $selectedDate;
+        $start = new DateTime("$dateField " . normalizeTime($startField));
+        $end = new DateTime("$dateField " . normalizeTime($endField));
+        if ($currentDateTime >= $start && $currentDateTime < $end) {
+            $isAvailable = false;
+            break;
         }
     }
 } else {
-    // For other dates, show available if any slot is available
     $isAvailable = in_array('Available', $availabilityStatus) || in_array('Available', $eveningAvailability);
 }
 
