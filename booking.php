@@ -612,6 +612,12 @@ document.getElementById('start_time').addEventListener('change', function() {
     checkAvailability();
 });
 
+// End time change event
+document.getElementById('end_time').addEventListener('change', function() {
+    document.getElementById('hidden_end_time').value = this.value;
+    checkAvailability();
+});
+
 // Submit button event
 document.querySelector('.submit-button').addEventListener('click', function(e) {
     e.preventDefault();
