@@ -841,40 +841,22 @@ function checkAvailability() {
             statusMessage.className = 'status-message available';
         } else {
             // Display detailed conflict information
-            let conflictMessage = '✗ Time slot is not available\n\n';
-            
-            if (availabilityResult.conflict_type === 'booking') {
-                conflictMessage += '📅 CONFLICT WITH EXISTING BOOKING:\n';
+            let conflictMessage = '✗ Time slot is not available. Unavailable: ';
+
+            let ranges = [];
+            if (availabilityResult.conflicts && availabilityResult.conflicts.bookings) {
                 availabilityResult.conflicts.bookings.forEach(booking => {
-                    conflictMessage += `• Booked by: ${booking.booked_by}\n`;
-                    conflictMessage += `• Time: ${booking.existing_start} - ${booking.existing_end}\n`;
-                    conflictMessage += `• Purpose: ${booking.purpose}\n\n`;
+                    ranges.push(`${booking.existing_start} - ${booking.existing_end}`);
                 });
-            } else if (availabilityResult.conflict_type === 'timetable') {
-                conflictMessage += '📚 CONFLICT WITH SCHEDULED CLASS:\n';
+            }
+            if (availabilityResult.conflicts && availabilityResult.conflicts.timetable) {
                 availabilityResult.conflicts.timetable.forEach(classInfo => {
-                    conflictMessage += `• Class: ${classInfo.class_name}\n`;
-                    conflictMessage += `• Time: ${classInfo.class_start} - ${classInfo.class_end}\n`;
-                    conflictMessage += `• Lecturer: ${classInfo.lecturer}\n\n`;
+                    ranges.push(`${classInfo.class_start} - ${classInfo.class_end}`);
                 });
-            } else if (availabilityResult.conflict_type === 'both') {
-                conflictMessage += '⚠️ CONFLICTS WITH BOTH BOOKING AND CLASS:\n\n';
-                
-                conflictMessage += '📅 EXISTING BOOKINGS:\n';
-                availabilityResult.conflicts.bookings.forEach(booking => {
-                    conflictMessage += `• Booked by: ${booking.booked_by}\n`;
-                    conflictMessage += `• Time: ${booking.existing_start} - ${booking.existing_end}\n`;
-                    conflictMessage += `• Purpose: ${booking.purpose}\n\n`;
-                });
-                
-                conflictMessage += '📚 SCHEDULED CLASSES:\n';
-                availabilityResult.conflicts.timetable.forEach(classInfo => {
-                    conflictMessage += `• Class: ${classInfo.class_name}\n`;
-                    conflictMessage += `• Time: ${classInfo.class_start} - ${classInfo.class_end}\n`;
-                    conflictMessage += `• Lecturer: ${classInfo.lecturer}\n\n`;
-                });
+            }
+            if (ranges.length > 0) {
+                conflictMessage += ranges.join(', ');
             } else {
-                // Fallback for other types of conflicts
                 conflictMessage += availabilityResult.reason || 'Unknown conflict';
             }
             
@@ -897,12 +879,12 @@ function checkTimeSlotAvailability(date, startTime, endTime) {
     xhr.open("GET", url, false); // synchronous for simplicity
     
     try {
-        xhr.send();
-        
-        if (xhr.status === 200) {
+    xhr.send();
+
+    if (xhr.status === 200) {
             const result = JSON.parse(xhr.responseText);
             return result;
-        } else {
+            } else {
             console.error('Availability check failed with status:', xhr.status);
             return { available: false, reason: 'Server error: ' + xhr.status };
         }
