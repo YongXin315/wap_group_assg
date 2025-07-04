@@ -2,40 +2,40 @@
 
     .filter-card {
         background-color: #ffffff;
-        border-radius: 1rem; /* Rounded corners */
+        border-radius: 1rem; 
         padding: 2.5rem;
         width: 100%;
-        max-width: 800px; /* Max width for larger screens */
-        margin: 0 auto; /* Center the card if its parent allows */
+        max-width: 800px; 
+        margin: 0 auto; 
     }
    
     .filter-input, .filter-select {
         width: 100%;
         padding: 0.75rem 1rem;
         border: 1px solid #b79f9f; 
-        border-radius: 0.5rem; /* Rounded corners */
+        border-radius: 0.5rem; 
         font-size: 1rem;
-        color: #374151; /* Darker text color for actual input */
-        background-color: #ffffff; /* White background */
+        color: #374151; 
+        background-color: #ffffff; 
         transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
     .filter-input:focus, .filter-select:focus {
         outline: none;
-        border-color: #a07a7a; /* Slightly darker reddish-brown on focus */
-        box-shadow: 0 0 0 2px rgba(183, 159, 159, 0.3); /* Soft shadow on focus */
+        border-color: #a07a7a; 
+        box-shadow: 0 0 0 2px rgba(183, 159, 159, 0.3); 
     }
     
     .filter-input::placeholder, .filter-select option[value=""][disabled] {
-        color: #a07a7a; /* Reddish-brown placeholder color */
+        color: #a07a7a; 
     }
     .filter-select option {
-        color: #374151; /* Default option text color */
+        color: #374151; 
     }
     .filter-label {
-        font-weight: 600; /* Semi-bold */
-        color: #1f2937; /* Dark text */
+        font-weight: 600; 
+        color: #1f2937; 
         margin-bottom: 0.5rem;
-        display: block; /* Ensure label is on its own line */
+        display: block; 
     }
 </style>
 
