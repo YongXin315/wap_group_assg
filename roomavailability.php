@@ -312,20 +312,10 @@ body, html {
                     
                     // Second pass: Display only room types that have available rooms
                     foreach ($roomTypesWithAvailableRooms as $roomType) {
-                        echo '<div class="room-type-filter">';
-                        echo '<div class="room-type-tab">';
-                        echo '<div class="room-type-text">' . htmlspecialchars($roomType) . '</div>';
-                        echo '</div>';
-                        echo '</div>';
-
-                        echo '<div class="rooms-section">';
-                        echo '<div class="rooms-container">';
-                        echo '<div class="rooms-row">';
-                        
                         // Get rooms of this type
                         $rooms = $db->rooms->find(['type' => $roomType]);
                         $roomCount = 0;
-                        
+                        $roomCardsHtml = '';
                         foreach ($rooms as $room) {
                             // Check if the room is under maintenance
                             if (isset($room['status']) && strtolower($room['status']) === 'under maintenance') {
@@ -481,27 +471,34 @@ body, html {
                                 ? 'onclick="bookRoom(\'' . htmlspecialchars($room['_id']) . '\')"'
                                 : '';
                             
-                            echo '<div class="room-card ' . $statusClass . '" ' . $onclick . '>';
-                            echo '<div class="room-info">';
-                            echo '<div class="room-name clickable" onclick="viewRoomDetails(\'' . htmlspecialchars($room['_id']) . '\', event)" title="Click to view room details">' . htmlspecialchars($room['room_name']) . '</div>';
-                            echo '<div class="room-status">';
-                            echo '<div class="status-' . $statusClass . '">' . $statusText . '</div>';
-                            echo '<div class="status-details">' . $bookingDetails . '</div>';
-                            echo '</div>';
-                            echo '</div>';
-                            echo '</div>';
+                            $roomCardsHtml .= '<div class="room-card ' . $statusClass . '" ' . $onclick . '>';
+                            $roomCardsHtml .= '<div class="room-info">';
+                            $roomCardsHtml .= '<div class="room-name clickable" onclick="viewRoomDetails(\'' . htmlspecialchars($room['_id']) . '\', event)" title="Click to view room details">' . htmlspecialchars($room['room_name']) . '</div>';
+                            $roomCardsHtml .= '<div class="room-status">';
+                            $roomCardsHtml .= '<div class="status-' . $statusClass . '">' . $statusText . '</div>';
+                            $roomCardsHtml .= '<div class="status-details">' . $bookingDetails . '</div>';
+                            $roomCardsHtml .= '</div>';
+                            $roomCardsHtml .= '</div>';
+                            $roomCardsHtml .= '</div>';
                             
                             $roomCount++;
                         }
                         
-                        // If no rooms found for this type, show a message
-                        if ($roomCount == 0) {
-                            echo '<div class="no-rooms-message">No ' . htmlspecialchars($roomType) . ' rooms found.</div>';
+                        // Only display the room type tab and section if there is at least one room card
+                        if ($roomCount > 0) {
+                            echo '<div class="room-type-filter">';
+                            echo '<div class="room-type-tab">';
+                            echo '<div class="room-type-text">' . htmlspecialchars($roomType) . '</div>';
+                            echo '</div>';
+                            echo '</div>';
+                            echo '<div class="rooms-section">';
+                            echo '<div class="rooms-container">';
+                            echo '<div class="rooms-row">';
+                            echo $roomCardsHtml;
+                            echo '</div>';
+                            echo '</div>';
+                            echo '</div>';
                         }
-                        
-                        echo '</div>';
-                        echo '</div>';
-                        echo '</div>';
                     }
                     
                 } catch (Exception $e) {
@@ -570,19 +567,33 @@ body, html {
     });
 
     function filterRooms(filter) {
-        const roomCards = document.querySelectorAll('.room-card');
-        
-        roomCards.forEach(card => {
-            if (filter === 'all') {
-                card.style.display = 'block';
-            } else if (filter === 'available' && card.classList.contains('available')) {
-                card.style.display = 'block';
-            } else if (filter === 'occupied' && (card.classList.contains('booked') || card.classList.contains('occupied'))) {
-                card.style.display = 'block';
-            } else if (filter === 'maintenance' && card.classList.contains('maintenance')) {
-                card.style.display = 'block';
+        const roomTypeSections = document.querySelectorAll('.room-type-filter');
+        const roomSections = document.querySelectorAll('.rooms-section');
+        // For each room type
+        roomTypeSections.forEach((typeSection, idx) => {
+            const roomCards = roomSections[idx].querySelectorAll('.room-card');
+            let visibleCount = 0;
+            roomCards.forEach(card => {
+                let show = false;
+                if (filter === 'all') {
+                    show = true;
+                } else if (filter === 'available' && card.classList.contains('available')) {
+                    show = true;
+                } else if (filter === 'occupied' && (card.classList.contains('booked') || card.classList.contains('occupied'))) {
+                    show = true;
+                } else if (filter === 'maintenance' && card.classList.contains('maintenance')) {
+                    show = true;
+                }
+                card.style.display = show ? 'block' : 'none';
+                if (show) visibleCount++;
+            });
+            // Hide or show the room type tab and section
+            if (visibleCount === 0) {
+                typeSection.style.display = 'none';
+                roomSections[idx].style.display = 'none';
             } else {
-                card.style.display = 'none';
+                typeSection.style.display = '';
+                roomSections[idx].style.display = '';
             }
         });
     }
