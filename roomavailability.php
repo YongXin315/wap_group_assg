@@ -248,7 +248,7 @@ body, html {
                                 // Check for approved bookings
                                 try {
                                     $approvedBookings = $db->bookings->find([
-                                        'room_id' => $room['_id'],
+                                        'room_id' => $room['_id'], // Use _id for bookings collection
                                         'booking_date' => $selectedDate,
                                         'status' => 'approved'
                                     ]);
@@ -275,7 +275,7 @@ body, html {
                                 if ($isAvailable) {
                                     try {
                                         $classSchedules = $db->class_timetable->find([
-                                            'room_name' => $room['room_name'],  // Changed from 'room_id' => $room['_id']
+                                            'room_id' => $room['_id'],  // Use _id for class_timetable collection since it stores room's _id
                                             'day_of_week' => $selectedDayOfWeek
                                         ]);
                                         
@@ -398,7 +398,7 @@ body, html {
                                 // Also check class_timetable for scheduled classes
                                 try {
                                     $classSchedules = $db->class_timetable->find([
-                                        'room_id' => $room['_id'],
+                                        'room_id' => $room['_id'], // Use _id for class_timetable collection since it stores room's _id
                                         'day_of_week' => $selectedDayOfWeek
                                     ]);
                                     foreach ($classSchedules as $classSchedule) {
@@ -442,7 +442,7 @@ body, html {
 
                                     // Check class_timetable
                                     $classSchedules = $db->class_timetable->find([
-                                        'room_id' => $room['_id'],
+                                        'room_id' => $room['_id'], // Use _id for class_timetable collection since it stores room's _id
                                         'day_of_week' => $selectedDayOfWeek
                                     ]);
                                     foreach ($classSchedules as $classSchedule) {
@@ -495,9 +495,9 @@ body, html {
                             echo '<div class="rooms-container">';
                             echo '<div class="rooms-row">';
                             echo $roomCardsHtml;
-                            echo '</div>';
-                            echo '</div>';
-                            echo '</div>';
+                        echo '</div>';
+                        echo '</div>';
+                        echo '</div>';
                         }
                     }
                     
@@ -573,15 +573,15 @@ body, html {
         roomTypeSections.forEach((typeSection, idx) => {
             const roomCards = roomSections[idx].querySelectorAll('.room-card');
             let visibleCount = 0;
-            roomCards.forEach(card => {
+        roomCards.forEach(card => {
                 let show = false;
-                if (filter === 'all') {
+            if (filter === 'all') {
                     show = true;
-                } else if (filter === 'available' && card.classList.contains('available')) {
+            } else if (filter === 'available' && card.classList.contains('available')) {
                     show = true;
-                } else if (filter === 'occupied' && (card.classList.contains('booked') || card.classList.contains('occupied'))) {
+            } else if (filter === 'occupied' && (card.classList.contains('booked') || card.classList.contains('occupied'))) {
                     show = true;
-                } else if (filter === 'maintenance' && card.classList.contains('maintenance')) {
+            } else if (filter === 'maintenance' && card.classList.contains('maintenance')) {
                     show = true;
                 }
                 card.style.display = show ? 'block' : 'none';

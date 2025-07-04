@@ -1,4 +1,7 @@
 <?php
+// ============================================================================
+// SESSION AND AUTHENTICATION
+// ============================================================================
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -9,9 +12,14 @@ if (!isset($_SESSION['student_id'])) {
     exit();
 }
 
+// ============================================================================
+// DATABASE CONNECTION AND DEPENDENCIES
+// ============================================================================
 require_once 'db.php';
 
-// Get room ID from URL parameter
+// ============================================================================
+// ROOM ID VALIDATION
+// ============================================================================
 $roomId = $_GET['room_id'] ?? '';
 
 if (empty($roomId)) {
@@ -19,12 +27,16 @@ if (empty($roomId)) {
     exit();
 }
 
-// Get room details from database
+// ============================================================================
+// ROOM DETAILS RETRIEVAL
+// ============================================================================
 try {
     $room = $db->rooms->findOne(['_id' => $roomId]);
+    
     if (!$room) {
         // Fallback to static data if room not found
         $room = [
+            '_id' => $roomId,
             'room_name' => $roomId,
             'type' => 'Classroom',
             'block' => 'Block D',
@@ -34,21 +46,13 @@ try {
             'class_timetable' => []
         ];
     } else {
-        // Convert MongoDB document to array and ensure all required fields exist with fallback values
-        $roomArray = $room->getArrayCopy();
-        $room = array_merge([
-            '_id' => $roomId,
-            'type' => 'Classroom',
-            'block' => 'Block D',
-            'floor' => 'Level 8',
-            'capacity' => '30-40 persons',
-            'amenities' => 'Whiteboard, Projector, Air-conditioning',
-            'class_timetable' => []
-        ], $roomArray);
+        // Convert MongoDB document to array - don't overwrite actual data with fallbacks
+        $room = $room->getArrayCopy();
     }
 } catch (Exception $e) {
     // Fallback to static data if database error
     $room = [
+        '_id' => $roomId,
         'room_name' => $roomId,
         'type' => 'Classroom',
         'block' => 'Block D',
@@ -59,6 +63,9 @@ try {
     ];
 }
 
+// ============================================================================
+// OCCUPANCY SETTINGS
+// ============================================================================
 // Set min/max occupancy from DB or fallback
 if (isset($room['min_occupancy'])) {
     $minOccupancy = (int)$room['min_occupancy'];
@@ -78,16 +85,14 @@ if (isset($room['max_occupancy'])) {
 
 $roomIdForQuery = isset($room['_id']) ? $room['_id'] : $roomId;
 
-// Handle form submission
+// ============================================================================
+// FORM SUBMISSION HANDLING
+// ============================================================================
 $bookingMessage = '';
 $bookingError = '';
-
 $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // var_dump($_POST);
-    // exit;
-
     // Get form data
     $studentId = $_POST['student_id'] ?? '';
     $fullName = $_POST['full_name'] ?? '';
@@ -98,6 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $numPeople = $_POST['num_people'] ?? '';
     $roomId = $_GET['room_id'] ?? '';
     $studentIdsRaw = $_POST['student_ids'] ?? '';
+    
     // Accept both array and comma-separated string
     if (is_array($studentIdsRaw)) {
         $studentIdsArr = array_filter(array_map('trim', $studentIdsRaw));
@@ -131,6 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+    
     // Check if user already booked a discussion room on the same date
     if (stripos($room['type'], 'Discussion Room') !== false && empty($bookingError)) {
         $existingBooking = $db->bookings->findOne([
@@ -146,19 +153,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $bookingError = 'You have already booked a discussion room on this date. Only one discussion room booking is allowed per day.';
         }
     }
+    
     if (empty($bookingError)) {
         // Prepare booking data
         $status = (stripos($room['type'], 'Discussion Room') !== false) ? 'approved' : 'pending';
-
-        function to12Hour($time) {
-            return date('g:i A', strtotime($time));
-        }
 
         $bookingData = [
             'student_id' => $studentId,
             'full_name' => $fullName,
             'room_id' => $roomId,
-            'booking_date' => $bookingDate,  // This is sufficient!
+            'booking_date' => $bookingDate,
             'start_time' => $startTime,
             'end_time' => $endTime,
             'purpose' => $purpose,
@@ -200,6 +204,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// ============================================================================
+// DATE AND TIME SETUP
+// ============================================================================
 // Set Malaysia timezone & "now"
 date_default_timezone_set('Asia/Kuala_Lumpur');
 $currentDate = date('Y-m-d');
@@ -208,21 +215,25 @@ $currentTime = date('H:i');
 // If both date & time are passed, use them; otherwise fall back to "now"
 $maxBookingDate = date('Y-m-d', strtotime($currentDate . ' +6 days'));
 $selectedDateRaw = $_GET['date'] ?? date('Y-m-d');
+
 // If the selected date is outside the allowed range, reset to today
 if ($selectedDateRaw < $currentDate || $selectedDateRaw > $maxBookingDate) {
     $selectedDate = $currentDate;
 } else {
     $selectedDate = $selectedDateRaw;
 }
+
 $selectedTime = $_GET['time'] ?? date('H:i');
-$selectedHour      = (int) substr($selectedTime, 0, 2);
-$defaultStartTime  = sprintf('%02d:00', $selectedHour);
+$selectedHour = (int) substr($selectedTime, 0, 2);
+$defaultStartTime = sprintf('%02d:00', $selectedHour);
 
 // Get day of week for the selected date
 $selectedDayOfWeek = date('l', strtotime($selectedDate));
 $isCurrentDate = ($selectedDate === $currentDate);
 
-// Determine time range based on room type and day of week
+// ============================================================================
+// TIME RANGE CALCULATION
+// ============================================================================
 function getTimeRange($roomType, $dayOfWeek, $isCurrentDate, $currentHour) {
     $isDiscussionRoom = (stripos($roomType, 'discussion') !== false);
     
@@ -244,7 +255,7 @@ function getTimeRange($roomType, $dayOfWeek, $isCurrentDate, $currentHour) {
         $startHour = max($startHour, $currentHour);
         // If current time is past closing time, start from opening time next day
         if ($currentHour >= $endHour) {
-            $startHour = $startHour; // This will be handled in the calling code
+            $startHour = $endHour; // This will result in no available times
         }
     }
     
@@ -265,25 +276,31 @@ if ($isCurrentDate && (int)date('H') >= $endHour) {
     $startHour = $endHour; // This will result in no available times
 }
 
-$cardClickable = true; // or your actual logic
-
-$onclick = ($cardClickable)
-    ? 'onclick="bookRoom(\'' . htmlspecialchars($room['_id']) . '\')"'
-    : '';
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+function to12Hour($time) {
+    return date('g:i A', strtotime($time));
+}
 ?>
 
 <?php include_once 'component/header.php'; ?>
 
+<!-- ============================================================================
+     CSS STYLES
+     ============================================================================ -->
 <style>
 body, html {
     min-height: 100vh;
     height: 100%;
 }
+
 .page-vertical-wrapper {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
+
 .main-container {
     flex: 1 0 auto;
     background: white;
@@ -293,6 +310,7 @@ body, html {
     align-items: flex-start;
     display: flex;
 }
+
 .content-wrapper {
     width: 100%;
     padding-left: 160px;
@@ -303,6 +321,7 @@ body, html {
     align-items: flex-start;
     display: flex;
 }
+
 .content-container {
     flex: 1 1 0;
     max-width: 960px;
@@ -312,6 +331,7 @@ body, html {
     align-items: flex-start;
     display: flex;
 }
+
 .summary-value.clickable {
     cursor: pointer;
     transition: all 0.3s ease;
@@ -361,10 +381,14 @@ body, html {
 }
 </style>
 
+<!-- ============================================================================
+     MAIN HTML STRUCTURE
+     ============================================================================ -->
 <div class="page-vertical-wrapper">
     <div class="main-container confirm-booking">
         <div class="content-wrapper confirm-booking">
             <div class="booking-container">
+                
                 <!-- Page Title -->
                 <div class="page-title-section">
                     <div class="page-title">Confirm Room Booking</div>
@@ -384,7 +408,9 @@ body, html {
                             <div class="summary-item">
                                 <div class="summary-label">Selected Date</div>
                                 <div class="summary-value-container">
-                                    <div class="summary-value" id="summary-date-value"><?php echo date('F j, Y', strtotime($selectedDate)); ?></div>
+                                    <div class="summary-value" id="summary-date-value">
+                                        <?php echo date('F j, Y', strtotime($selectedDate)); ?>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -398,14 +424,16 @@ body, html {
                         <div class="form-group">
                             <label for="student_id" class="form-label">Student ID</label>
                             <input type="text" id="student_id" name="student_id" class="form-input" 
-                                   placeholder="e.g., 0312345" value="<?php echo htmlspecialchars($_SESSION['student_id'] ?? ''); ?>" required>
+                                   placeholder="e.g., 0312345" 
+                                   value="<?php echo htmlspecialchars($_SESSION['student_id'] ?? ''); ?>" required>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="full_name" class="form-label">Full Name</label>
                             <input type="text" id="full_name" name="full_name" class="form-input" 
-                                   placeholder="Enter your full name" value="<?php echo htmlspecialchars($_SESSION['student_name'] ?? ''); ?>" required>
+                                   placeholder="Enter your full name" 
+                                   value="<?php echo htmlspecialchars($_SESSION['student_name'] ?? ''); ?>" required>
                         </div>
                     </div>
                 </div>
@@ -455,7 +483,6 @@ body, html {
                                 for ($hour = $defaultEndHour; $hour <= $endHour; $hour++) {
                                     $time = sprintf('%02d:00', $hour);
                                     $displayTime = date('g:i A', strtotime($time));
-                                    // Do NOT set selected here unless you want to pre-select a value
                                     echo "<option value=\"$time\">$displayTime</option>";
                                 }
                                 ?>
@@ -489,7 +516,7 @@ body, html {
                     </div>
                 </div>
 
-                <!-- Add field for student IDs if Discussion Room -->
+                <!-- Student IDs Section (Discussion Rooms Only) -->
                 <?php if (stripos($room['type'], 'Discussion Room') !== false): ?>
                 <div class="form-row" id="student-ids-row" style="display:none;">
                     <div class="form-group">
@@ -527,7 +554,7 @@ body, html {
     </div>
 </div>
 
-
+<!-- Hidden Form for AJAX Submission -->
 <form id="booking-form" method="POST" style="display: none;">
     <input type="hidden" name="student_id" id="hidden_student_id">
     <input type="hidden" name="full_name" id="hidden_full_name">
@@ -537,7 +564,21 @@ body, html {
     <input type="hidden" name="purpose" id="hidden_purpose">
     <input type="hidden" name="num_people" id="hidden_num_people">
 </form>
+
+<!-- ============================================================================
+     JAVASCRIPT FUNCTIONALITY
+     ============================================================================ -->
 <script>
+// ============================================================================
+// GLOBAL VARIABLES
+// ============================================================================
+const roomType = '<?php echo htmlspecialchars($room['type']); ?>';
+const roomId = '<?php echo htmlspecialchars($roomId); ?>';
+
+// ============================================================================
+// EVENT LISTENERS
+// ============================================================================
+
 // Auto-fill hidden form when visible inputs change
 document.getElementById('student_id').addEventListener('input', function() {
     document.getElementById('hidden_student_id').value = this.value;
@@ -547,14 +588,57 @@ document.getElementById('full_name').addEventListener('input', function() {
     document.getElementById('hidden_full_name').value = this.value;
 });
 
+document.getElementById('purpose').addEventListener('input', function() {
+    document.getElementById('hidden_purpose').value = this.value;
+});
+
+document.getElementById('num_people').addEventListener('input', function() {
+    document.getElementById('hidden_num_people').value = this.value;
+    updateStudentIdFields();
+});
+
+// Date change event - update time options dynamically
 document.getElementById('booking_date').addEventListener('change', function() {
     updateSummaryDate();
-    // updateCalendar(); // <-- comment this out if not needed
     updateTimeOptions();
     updateEndTimeOptions();
     checkAvailability();
 });
 
+// Start time change event
+document.getElementById('start_time').addEventListener('change', function() {
+    document.getElementById('hidden_start_time').value = this.value;
+    updateEndTimeOptions();
+    checkAvailability();
+});
+
+// Submit button event
+document.querySelector('.submit-button').addEventListener('click', function(e) {
+    e.preventDefault();
+    submitBooking();
+});
+
+// Room name link click event
+document.getElementById('room-name-link').addEventListener('click', function() {
+    const date = document.getElementById('booking_date').value;
+    const time = document.getElementById('start_time').value;
+    let url = "roomdetails.php?room_id=" + roomId;
+    if (date) {
+        url += "&date=" + encodeURIComponent(date);
+    }
+    if (time) {
+        url += "&time=" + encodeURIComponent(time);
+    }
+    window.location.href = url;
+});
+
+// ============================================================================
+// CORE FUNCTIONS
+// ============================================================================
+
+/**
+ * Update the summary date display
+ */
 function updateSummaryDate() {
     const selectedDate = document.getElementById('booking_date').value;
     if (selectedDate) {
@@ -568,52 +652,27 @@ function updateSummaryDate() {
     }
 }
 
+/**
+ * Update time options based on selected date and room type
+ */
 function updateTimeOptions() {
     console.log('updateTimeOptions called');
-    const selectedDate = document.getElementById('booking_date').value;
-    const currentDate = new Date().toISOString().split('T')[0];
-    const currentHour = new Date().getHours();
-    const isCurrentDate = (selectedDate === currentDate);
     
-    // Get room type from PHP variable
-    const roomType = '<?php echo htmlspecialchars($room['type']); ?>';
+    const selectedDate = document.getElementById('booking_date').value;
+    const today = new Date();
+    const selected = new Date(selectedDate);
+    const isCurrentDate = (selected.toDateString() === today.toDateString());
+    let currentHour = today.getHours();
     
     // Get day of week for selected date
-    const dateObj = new Date(selectedDate);
-    const dayOfWeek = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+    const dayOfWeek = selected.toLocaleDateString('en-US', { weekday: 'long' });
     
     // Determine time range based on room type and day of week
-    function getTimeRange(roomType, dayOfWeek, isCurrentDate, currentHour) {
-        const isDiscussionRoom = roomType.toLowerCase().includes('discussion');
-        
-        let startHour, endHour;
-        
-        if (isDiscussionRoom) {
-            if (dayOfWeek === 'Saturday') {
-                startHour = 9; // 9 AM
-                endHour = 17;  // 5 PM
-            } else {
-                startHour = 8; // 8 AM
-                endHour = 21;  // 9 PM
-            }
-        } else {
-            startHour = 8; // 8 AM
-            endHour = 22;  // 10 PM
-        }
-        
-        // If it's current date, start from current hour
-        if (isCurrentDate) {
-            startHour = Math.max(startHour, currentHour);
-        }
-        
-        return { start: startHour, end: endHour };
-    }
-    
     const timeRange = getTimeRange(roomType, dayOfWeek, isCurrentDate, currentHour);
     const startHour = timeRange.start;
     const endHour = timeRange.end;
     
-    // Get start time select
+    // Get select elements
     const startTimeSelect = document.getElementById('start_time');
     const endTimeSelect = document.getElementById('end_time');
     
@@ -660,195 +719,23 @@ function updateTimeOptions() {
     // Update hidden form values
     document.getElementById('hidden_start_time').value = startTimeSelect.value;
     document.getElementById('hidden_end_time').value = endTimeSelect.value;
-    
-    // Update end time options based on selected start time
-    updateEndTimeOptions();
 }
 
-document.getElementById('purpose').addEventListener('input', function() {
-    document.getElementById('hidden_purpose').value = this.value;
-});
-
-document.getElementById('num_people').addEventListener('input', function() {
-    document.getElementById('hidden_num_people').value = this.value;
-});
-
-// Calendar functionality
-let currentCalendarDate = new Date();
-
-function initializeCalendar() {
-    updateCalendar();
-}
-
-function updateCalendar() {
-    const calendarDates = document.getElementById('calendar-dates');
-    const calendarTitle = document.getElementById('calendar-title');
-    if (!calendarTitle) return; // Prevent error if element is missing
-    
-    // Update title
-    const monthYear = currentCalendarDate.toLocaleDateString('en-US', { 
-        month: 'long', 
-        year: 'numeric' 
-    });
-    calendarTitle.textContent = 'Next 7 Days';
-    
-    // Generate calendar dates
-    calendarDates.innerHTML = '';
-    
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    const lastAllowed = new Date(today);
-    lastAllowed.setDate(today.getDate() + 6);
-    
-    // Only show the next 7 days
-    for (let i = 0; i < 7; i++) {
-        const currentDate = new Date(today);
-        currentDate.setDate(today.getDate() + i);
-        const dayDiv = document.createElement('div');
-        dayDiv.className = 'calendar-day';
-        if (i === 0) dayDiv.className += ' today';
-        if (currentDate.toDateString() === new Date(document.getElementById('booking_date').value).toDateString()) dayDiv.className += ' selected';
-        dayDiv.textContent = currentDate.getDate();
-        dayDiv.onclick = function() {
-            selectCalendarDate(currentDate);
-        };
-        calendarDates.appendChild(dayDiv);
-    }
-}
-
-function selectCalendarDate(date) {
-    // Format date as YYYY-MM-DD
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const dateString = `${year}-${month}-${day}`;
-
-    // Reload the page with the new date parameter
-    const url = new URL(window.location);
-    url.searchParams.set('date', dateString);
-    window.history.pushState({}, '', url);
-
-    // Update the schedule for the selected date
-    updateSchedule(dateString);
-
-    // Update calendar selection
-    updateCalendar();
-
-    console.log('Selected date:', dateString);
-}
-
-function previousMonth() {}
-function nextMonth() {}
-
-// Availability checking
-function checkAvailability() {
-    const selectedDate = document.getElementById('booking_date').value;
-    const startTime = document.getElementById('start_time').value;
-    const endTime = document.getElementById('end_time').value;
-    
-    const statusDisplay = document.getElementById('availability-status');
-    const statusMessage = statusDisplay.querySelector('.status-message');
-    
-    if (!selectedDate || !startTime || !endTime) {
-        statusMessage.textContent = 'Select a date and time to check availability';
-        statusMessage.className = 'status-message';
-        return;
-    }
-    
-    // Show checking status
-    statusMessage.textContent = 'Checking availability...';
-    statusMessage.className = 'status-message checking';
-    
-    // Simulate availability check (replace with actual database query)
-    setTimeout(() => {
-        const isAvailable = checkTimeSlotAvailability(selectedDate, startTime, endTime);
-        
-        if (isAvailable) {
-            statusMessage.textContent = '✓ Time slot is available for booking';
-            statusMessage.className = 'status-message available';
-        } else {
-            statusMessage.textContent = '✗ Time slot is not available (already booked or in use)';
-            statusMessage.className = 'status-message unavailable';
-        }
-    }, 500);
-}
-
-function checkTimeSlotAvailability(date, startTime, endTime) {
-    var roomId = "<?php echo htmlspecialchars($roomId); ?>";
-    var url = "handlers/check_availability.php?room_id=" + encodeURIComponent(roomId)
-        + "&date=" + encodeURIComponent(date)
-        + "&start_time=" + encodeURIComponent(startTime)
-        + "&end_time=" + encodeURIComponent(endTime);
-
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", url, false); // synchronous for simplicity, you can use async with callbacks/promises
-    xhr.send();
-
-    if (xhr.status === 200) {
-        var result = JSON.parse(xhr.responseText);
-        return result.available;
-    }
-    return false;
-}
-
-// Initialize calendar when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    initializeCalendar();
-    // 1) Populate the "end_time" dropdown based on the PHP-selected start_time
-    updateEndTimeOptions();
-
-    // 2) Seed hidden fields for form submission
-    document.getElementById('hidden_booking_date').value = document.getElementById('booking_date').value;
-    document.getElementById('hidden_start_time').value   = document.getElementById('start_time').value;
-    document.getElementById('hidden_end_time').value     = document.getElementById('end_time').value;
-
-    // 3) (Optional) Check availability immediately
-    checkAvailability();
-});
-
-// When the user picks a new start_time, rebuild end_time
-document.getElementById('start_time').addEventListener('change', function() {
-    document.getElementById('hidden_start_time').value = this.value;
-    updateEndTimeOptions();
-    checkAvailability();
-});
-
+/**
+ * Update end time options based on selected start time
+ */
 function updateEndTimeOptions() {
     const selectedDate = document.getElementById('booking_date').value;
     const startTime = document.getElementById('start_time').value;
-    const currentDate = new Date().toISOString().split('T')[0];
-    const currentHour = new Date().getHours();
-    const isCurrentDate = (selectedDate === currentDate);
-    
-    // Get room type from PHP variable
-    const roomType = '<?php echo htmlspecialchars($room['type']); ?>';
+    const today = new Date();
+    const selected = new Date(selectedDate);
+    const isCurrentDate = (selected.toDateString() === today.toDateString());
+    let currentHour = today.getHours();
     
     // Get day of week for selected date
-    const dateObj = new Date(selectedDate);
-    const dayOfWeek = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+    const dayOfWeek = selected.toLocaleDateString('en-US', { weekday: 'long' });
     
-    // Determine time range based on room type and day of week
-    function getTimeRange(roomType, dayOfWeek, isCurrentDate, currentHour) {
-        const isDiscussionRoom = roomType.toLowerCase().includes('discussion');
-        
-        let startHour, endHour;
-        
-        if (isDiscussionRoom) {
-            if (dayOfWeek === 'Saturday') {
-                startHour = 9; // 9 AM
-                endHour = 17;  // 5 PM
-            } else {
-                startHour = 8; // 8 AM
-                endHour = 21;  // 9 PM
-            }
-        } else {
-            startHour = 8; // 8 AM
-            endHour = 22;  // 10 PM
-        }
-        
-        return { start: startHour, end: endHour };
-    }
-
+    // Determine time range
     const timeRange = getTimeRange(roomType, dayOfWeek, isCurrentDate, currentHour);
     const endHour = timeRange.end;
     
@@ -886,21 +773,143 @@ function updateEndTimeOptions() {
     }
 }
 
-function bookRoom(roomId) {
-    const dateInput = document.querySelector('.date-picker-input');
-    const dt = dateInput ? dateInput.value : '';
-    let url = 'booking.php?room_id=' + encodeURIComponent(roomId);
-
-    if (dt) {
-        const [date, time] = dt.split('T');
-        url += `&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`;
+/**
+ * Determine time range based on room type and day of week
+ */
+function getTimeRange(roomType, dayOfWeek, isCurrentDate, currentHour) {
+    const isDiscussionRoom = roomType.toLowerCase().includes('discussion');
+    
+    let startHour, endHour;
+    
+    if (isDiscussionRoom) {
+        if (dayOfWeek === 'Saturday') {
+            startHour = 9; // 9 AM
+            endHour = 17;  // 5 PM
+        } else {
+            startHour = 8; // 8 AM
+            endHour = 21;  // 9 PM
+        }
+    } else {
+        startHour = 8; // 8 AM
+        endHour = 22;  // 10 PM
     }
-    window.location.href = url;
+    
+    // If it's current date, start from current hour
+    if (isCurrentDate) {
+        startHour = Math.max(startHour, currentHour);
+    }
+    
+    return { start: startHour, end: endHour };
 }
 
-document.querySelector('.submit-button').addEventListener('click', function(e) {
-    e.preventDefault();
+/**
+ * Check availability for selected time slot
+ */
+function checkAvailability() {
+    const selectedDate = document.getElementById('booking_date').value;
+    const startTime = document.getElementById('start_time').value;
+    const endTime = document.getElementById('end_time').value;
+    
+    const statusDisplay = document.getElementById('availability-status');
+    const statusMessage = statusDisplay.querySelector('.status-message');
+    
+    if (!selectedDate || !startTime || !endTime) {
+        statusMessage.textContent = 'Select a date and time to check availability';
+        statusMessage.className = 'status-message';
+        return;
+    }
+    
+    // Show checking status
+    statusMessage.textContent = 'Checking availability...';
+    statusMessage.className = 'status-message checking';
+    
+    // Check availability via AJAX
+    setTimeout(() => {
+        const availabilityResult = checkTimeSlotAvailability(selectedDate, startTime, endTime);
+        
+        // Log the result for debugging
+        console.log('Availability check result:', availabilityResult);
+        
+        if (availabilityResult.available) {
+            statusMessage.textContent = '✓ Time slot is available for booking';
+            statusMessage.className = 'status-message available';
+        } else {
+            // Display detailed conflict information
+            let conflictMessage = '✗ Time slot is not available\n\n';
+            
+            if (availabilityResult.conflict_type === 'booking') {
+                conflictMessage += '📅 CONFLICT WITH EXISTING BOOKING:\n';
+                availabilityResult.conflicts.bookings.forEach(booking => {
+                    conflictMessage += `• Booked by: ${booking.booked_by}\n`;
+                    conflictMessage += `• Time: ${booking.existing_start} - ${booking.existing_end}\n`;
+                    conflictMessage += `• Purpose: ${booking.purpose}\n\n`;
+                });
+            } else if (availabilityResult.conflict_type === 'timetable') {
+                conflictMessage += '📚 CONFLICT WITH SCHEDULED CLASS:\n';
+                availabilityResult.conflicts.timetable.forEach(classInfo => {
+                    conflictMessage += `• Class: ${classInfo.class_name}\n`;
+                    conflictMessage += `• Time: ${classInfo.class_start} - ${classInfo.class_end}\n`;
+                    conflictMessage += `• Lecturer: ${classInfo.lecturer}\n\n`;
+                });
+            } else if (availabilityResult.conflict_type === 'both') {
+                conflictMessage += '⚠️ CONFLICTS WITH BOTH BOOKING AND CLASS:\n\n';
+                
+                conflictMessage += '📅 EXISTING BOOKINGS:\n';
+                availabilityResult.conflicts.bookings.forEach(booking => {
+                    conflictMessage += `• Booked by: ${booking.booked_by}\n`;
+                    conflictMessage += `• Time: ${booking.existing_start} - ${booking.existing_end}\n`;
+                    conflictMessage += `• Purpose: ${booking.purpose}\n\n`;
+                });
+                
+                conflictMessage += '📚 SCHEDULED CLASSES:\n';
+                availabilityResult.conflicts.timetable.forEach(classInfo => {
+                    conflictMessage += `• Class: ${classInfo.class_name}\n`;
+                    conflictMessage += `• Time: ${classInfo.class_start} - ${classInfo.class_end}\n`;
+                    conflictMessage += `• Lecturer: ${classInfo.lecturer}\n\n`;
+                });
+            } else {
+                // Fallback for other types of conflicts
+                conflictMessage += availabilityResult.reason || 'Unknown conflict';
+            }
+            
+            statusMessage.textContent = conflictMessage;
+            statusMessage.className = 'status-message unavailable';
+        }
+    }, 500);
+}
 
+/**
+ * Check time slot availability via AJAX
+ */
+function checkTimeSlotAvailability(date, startTime, endTime) {
+    const url = "handlers/check_availability.php?room_id=" + encodeURIComponent(roomId)
+        + "&date=" + encodeURIComponent(date)
+        + "&start_time=" + encodeURIComponent(startTime)
+        + "&end_time=" + encodeURIComponent(endTime);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", url, false); // synchronous for simplicity
+    
+    try {
+        xhr.send();
+        
+        if (xhr.status === 200) {
+            const result = JSON.parse(xhr.responseText);
+            return result;
+        } else {
+            console.error('Availability check failed with status:', xhr.status);
+            return { available: false, reason: 'Server error: ' + xhr.status };
+        }
+    } catch (error) {
+        console.error('Error checking availability:', error);
+        return { available: false, reason: 'Network error: ' + error.message };
+    }
+}
+
+/**
+ * Submit booking via AJAX
+ */
+function submitBooking() {
     // Collect form data
     const formData = new FormData();
     formData.append('student_id', document.getElementById('student_id').value);
@@ -910,7 +919,8 @@ document.querySelector('.submit-button').addEventListener('click', function(e) {
     formData.append('end_time', document.getElementById('end_time').value);
     formData.append('purpose', document.getElementById('purpose').value);
     formData.append('num_people', document.getElementById('num_people').value);
-    const studentIdInputs = document.querySelectorAll('input[name=\"student_ids[]\"]');
+    
+    const studentIdInputs = document.querySelectorAll('input[name="student_ids[]"]');
     if (studentIdInputs.length > 0) {
         let ids = [];
         studentIdInputs.forEach(input => ids.push(input.value));
@@ -931,7 +941,7 @@ document.querySelector('.submit-button').addEventListener('click', function(e) {
 
         if (data.success) {
             alert(data.message);
-            // Optionally redirect after a delay
+            // Redirect after a delay
             setTimeout(() => {
                 window.location.href = data.redirect;
             }, 2000);
@@ -943,34 +953,11 @@ document.querySelector('.submit-button').addEventListener('click', function(e) {
             document.querySelector('.booking-container').prepend(msg);
         }
     });
-});
-
-document.getElementById('room-name-link').addEventListener('click', function() {
-    // Get selected date and time from the form
-    var date = document.getElementById('booking_date').value;
-    var time = document.getElementById('start_time').value;
-    var roomId = "<?php echo urlencode($roomId); ?>";
-    var url = "roomdetails.php?room_id=" + roomId;
-    if (date) {
-        url += "&date=" + encodeURIComponent(date);
-    }
-    if (time) {
-        url += "&time=" + encodeURIComponent(time);
-    }
-    window.location.href = url;
-});
-
-function checkRoomAvailability(roomId, date, startTime, endTime, callback) {
-    var url = "handlers/check_availability.php?room_id=" + encodeURIComponent(roomId)
-        + "&date=" + encodeURIComponent(date)
-        + "&start_time=" + encodeURIComponent(startTime)
-        + "&end_time=" + encodeURIComponent(endTime);
-
-    fetch(url)
-        .then(response => response.json())
-        .then(data => callback(data));
 }
 
+/**
+ * Update student ID fields for discussion rooms
+ */
 function updateStudentIdFields() {
     const numPeople = parseInt(document.getElementById('num_people').value) || 0;
     const min = <?php echo $minOccupancy; ?>;
@@ -978,6 +965,9 @@ function updateStudentIdFields() {
     const container = document.getElementById('student-ids-container');
     const row = document.getElementById('student-ids-row');
     const hint = document.getElementById('student-ids-hint');
+    
+    if (!container || !row || !hint) return; // Exit if elements don't exist
+    
     container.innerHTML = '';
     hint.textContent = '';
 
@@ -998,10 +988,23 @@ function updateStudentIdFields() {
     }
 }
 
-document.getElementById('num_people').addEventListener('input', updateStudentIdFields);
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
 
-// Initialize on page load if value is present
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Seed hidden fields for form submission
+    document.getElementById('hidden_booking_date').value = document.getElementById('booking_date').value;
+    document.getElementById('hidden_start_time').value = document.getElementById('start_time').value;
+    document.getElementById('hidden_end_time').value = document.getElementById('end_time').value;
+
+    // Initialize student ID fields if needed
 updateStudentIdFields();
+    
+    // Check availability immediately
+    checkAvailability();
+});
 </script>
 
 <?php include_once 'component/footer.php'; ?>

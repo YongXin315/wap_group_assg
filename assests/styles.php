@@ -2372,6 +2372,39 @@
         padding: 8px;
     }
 
+    /* Detailed conflict message styles */
+    .status-message.unavailable {
+        color: #721c24;
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 6px;
+        padding: 12px;
+        text-align: left;
+        white-space: pre-line;
+        line-height: 1.5;
+        font-size: 13px;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .status-message.unavailable::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .status-message.unavailable::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .status-message.unavailable::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+
+    .status-message.unavailable::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
     /* Calendar Styles for Booking Page */
     .calendar-preview .calendar-header {
         display: flex;

@@ -82,7 +82,7 @@ $selectedDayOfWeek = date('l', strtotime($selectedDate));
 // Query class_timetable for this room and day
 $schedule = [];
 $classSchedules = $db->class_timetable->find([
-    'room_id' => $room['_id'],  // Changed from $room['room_name'] to $room['_id']
+    'room_id' => $room['_id'],  // Use _id for class_timetable collection since it stores room's _id
     'day_of_week' => $selectedDayOfWeek
 ])->toArray();
 foreach ($classSchedules as $class) {
@@ -95,7 +95,7 @@ foreach ($classSchedules as $class) {
 
 // Query bookings for this room and day (if you have a bookings collection)
 $bookings = $db->bookings->find([
-    'room_id' => $room['_id'],  // Fixed: now matches the field mapping used elsewhere
+    'room_id' => $room['_id'],  // Use _id for bookings collection since that's what's stored
     'booking_date' => $selectedDate, 
     'status' => 'approved'
 ])->toArray();
@@ -1188,8 +1188,7 @@ body {
 
         <!-- Bottom Book Button -->
     <div class="bottom-button-container">
-        <div class="bottom-button-wrapper">
-            <button class="bottom-book-button" onclick="bookThisRoom('<?php echo htmlspecialchars($room['room_name']); ?>')">
+        <div class="bottom-button-wrapper">            <button class="bottom-book-button" onclick="bookThisRoom('<?php echo htmlspecialchars($room['_id']); ?>')">
                 <div class="text">Book this room</div>
             </button>
         </div>
@@ -1344,12 +1343,12 @@ function nextMonth() {
     updateCalendar();
 }
 
-function bookThisRoom(roomName) {
+function bookThisRoom(roomId) {
     // Get the selected date from the calendar
     const dateString = selectedCalendarDate.toISOString().split('T')[0];
     
     // Build the URL with room_id and date parameters
-    let url = 'booking.php?room_id=' + encodeURIComponent(roomName);
+    let url = 'booking.php?room_id=' + encodeURIComponent(roomId);
     if (dateString) {
         url += '&date=' + encodeURIComponent(dateString);
     }
