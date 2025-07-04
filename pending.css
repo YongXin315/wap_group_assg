@@ -2,12 +2,12 @@
 body {
     margin: 0;
     font-family: 'Inter', sans-serif;
-    background-color: #f0f2f5; /* Light grey background for the overall page */
+    background-color: #f0f2f5; 
 }
 
 .page-content-wrapper {
     align-self: stretch;
-    height: 753px; /* As per original HTML, might need adjustment for responsiveness */
+    height: 753px; 
     background: white;
     display: flex;
     flex-direction: column;
@@ -18,7 +18,7 @@ body {
 .page-content {
     align-self: stretch;
     flex: 1 1 0;
-    padding: 20px 160px; /* Equivalent to padding-left/right/top/bottom */
+    padding: 20px 160px; 
     display: flex;
     justify-content: center;
     align-items: flex-start;
@@ -64,7 +64,7 @@ body {
 /* Search Bar Section */
 .search-bar-section {
     align-self: stretch;
-    padding: 12px 16px; /* Equivalent to padding-left/right/top/bottom */
+    padding: 12px 16px; 
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -106,23 +106,19 @@ body {
     height: 24px;
     position: relative;
     overflow: hidden;
-    background: #944F52; /* This seems to be the background for the icon area */
+    background: #944F52; 
 }
 
-/* Note: The original HTML for the search icon had an empty div and a div with left/top undefined.
-   This might require an SVG or an actual icon font for a proper search icon.
-   For now, I'm just leaving placeholders. If you have an icon, replace this. */
 .search-icon-placeholder {
     width: 24px;
     height: 24px;
-    /* Styles for your actual search icon */
 }
 
 
 .search-placeholder {
     flex: 1 1 0;
     align-self: stretch;
-    padding: 8px 16px 8px 8px; /* Equivalent to padding-top/bottom/left/right */
+    padding: 8px 16px 8px 8px; 
     background: #F2E8E8;
     overflow: hidden;
     border-top-right-radius: 12px;
@@ -140,7 +136,7 @@ body {
 /* Filter Section */
 .filter-section {
     max-width: 480px;
-    padding: 12px 16px; /* Equivalent to padding-left/right/top/bottom */
+    padding: 12px 16px; 
     display: flex;
     justify-content: flex-start;
     align-items: flex-end;
@@ -158,19 +154,19 @@ body {
     border-radius: 12px;
     outline: 1px #E5DBDB solid;
     outline-offset: -1px;
-    display: flex; /* Added for better positioning of children */
-    align-items: center; /* Vertically align items */
-    padding-left: 17px; /* Matches original left position of text */
+    display: flex; 
+    align-items: center; 
+    padding-left: 17px; 
 }
 
 .dropdown-icon-placeholder {
     width: 28px;
-    height: 41px; /* Original height of placeholder, might be too tall for an icon */
+    height: 41px; 
     position: absolute;
-    right: 10px; /* Position to the right */
-    top: 50%; /* Center vertically */
-    transform: translateY(-50%); /* Adjust for vertical centering */
-    background: #876363; /* Placeholder color, replace with actual dropdown icon */
+    right: 10px; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    background: #876363; 
 }
 
 .room-type-label {
@@ -184,7 +180,7 @@ body {
 /* Table Section */
 .table-section {
     align-self: stretch;
-    padding: 12px 16px; /* Equivalent to padding-left/right/top/bottom */
+    padding: 12px 16px; 
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -214,11 +210,11 @@ body {
 .table-header {
     align-self: stretch;
     display: flex;
-    flex-direction: row; /* Ensure items are in a row */
+    flex-direction: row; 
     justify-content: flex-start;
     align-items: flex-start;
-    background: white; /* Header background */
-    border-bottom: 1px solid #E5E8EB; /* Separator for header */
+    background: white; 
+    border-bottom: 1px solid #E5E8EB; 
 }
 
 .header-cell {
@@ -227,7 +223,7 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    box-sizing: border-box; /* Include padding in width calculation */
+    box-sizing: border-box; 
 }
 
 .header-cell.booking-id { width: 114px; }
@@ -236,7 +232,7 @@ body {
 .header-cell.time { width: 100px; }
 .header-cell.student-id { width: 130px; }
 .header-cell.purpose { width: 144px; }
-.header-cell.actions { width: 194px; } /* Combined width for Approve/Reject, adjust as needed */
+.header-cell.actions { width: 194px; } 
 
 .header-cell .cell-text {
     align-self: stretch;
@@ -276,8 +272,8 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    box-sizing: border-box; /* Include padding in width calculation */
-    height: 72px; /* Ensure consistent height */
+    box-sizing: border-box; 
+    height: 72px; 
 }
 
 .data-cell.booking-id { width: 114px; }
@@ -286,8 +282,8 @@ body {
 .data-cell.time { width: 100px; }
 .data-cell.student-id { width: 130px; }
 .data-cell.purpose { width: 144px; }
-.data-cell.action-button.approve { width: 105px; } /* Specific width for Approve button */
-.data-cell.action-button.reject { width: 91px; } /* Specific width for Reject button */
+.data-cell.action-button.approve { width: 105px; } 
+.data-cell.action-button.reject { width: 91px; } 
 
 
 .data-cell .cell-text {
@@ -303,10 +299,9 @@ body {
 .data-cell.action-button .cell-text {
     color: #944F52;
     font-weight: 700;
-    cursor: pointer; /* Indicate that these are clickable actions */
+    cursor: pointer; 
 }
 
-/* Basic hover states for actions (optional but good practice) */
 .data-cell.action-button .cell-text:hover {
     text-decoration: underline;
 }
