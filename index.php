@@ -380,6 +380,7 @@ window.addEventListener('DOMContentLoaded', function() {
         <h2 class="section-title" id="available-rooms-title">Available Rooms (current)</h2>
         <div class="rooms-grid">
             <?php foreach ($rooms as $room):
+                if (isset($room['status']) && strtolower($room['status']) !== 'available') continue;
                 $icon = 'fas fa-door-open';
                 if (isset($room['type'])) {
                     switch ($room['type']) {
@@ -393,7 +394,7 @@ window.addEventListener('DOMContentLoaded', function() {
             <div class="room-card" data-room-type="<?php echo isset($room['type']) ? htmlspecialchars($room['type']) : ''; ?>" data-room-id="<?php echo isset($room['_id']) ? htmlspecialchars($room['_id']) : ''; ?>">
                 <div class="room-card-body">
                     <h3>
-                        <a href="roomdetails.php?room_id=<?php echo urlencode($room['_id']); ?>" class="room-link">
+                        <a href="roomdetails.php?room_id=<?php echo urlencode($room['_id']); ?>&date=<?php echo urlencode(date('Y-m-d')); ?>" class="room-link">
                             <?php echo isset($room['room_name']) ? htmlspecialchars($room['room_name']) : ''; ?>
                         </a>
                     </h3>

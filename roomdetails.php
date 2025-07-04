@@ -24,7 +24,8 @@ try {
             'floor' => 'Level 7.14',
             'capacity' => '21-30 persons',
             'amenities' => 'Whiteboard, TV screen, Air-conditioning, Computers',
-            'class_timetable' => []
+            'class_timetable' => [],
+            'status' => 'Available' // Added status field
         ];
     } else {
         // Convert MongoDB document to array and ensure all required fields exist
@@ -37,7 +38,8 @@ try {
             'floor' => 'Level 7.14',
             'capacity' => '21-30 persons',
             'amenities' => 'Whiteboard, TV screen, Air-conditioning, Computers',
-            'class_timetable' => []
+            'class_timetable' => [],
+            'status' => 'Available' // Added status field
         ], $roomArray);
     }
 } catch (Exception $e) {
@@ -50,7 +52,8 @@ try {
         'floor' => 'Level 7.14',
         'capacity' => '21-30 persons',
         'amenities' => 'Whiteboard, TV screen, Air-conditioning, Computers',
-        'class_timetable' => []
+        'class_timetable' => [],
+        'status' => 'Available' // Added status field
     ];
 }
 
@@ -248,6 +251,8 @@ if (!function_exists('to12Hour')) {
         return date('g:i A', strtotime($time));
     }
 }
+
+$isUnderMaintenance = (isset($room['status']) && strtolower($room['status']) !== 'available');
 ?>
 
 <?php include_once 'component/header.php'; ?>
@@ -1000,13 +1005,19 @@ body {
                             <div class="icon-inner"></div>
                     </div>
                     <div class="status-text">
-                            <div class="status-label <?php echo $isAvailable ? '' : 'occupied'; ?>">
-                                <?php echo $isAvailable ? 'Currently Available' : 'Currently Occupied'; ?>
+                            <div class="status-label <?php echo $isUnderMaintenance ? 'occupied' : ($isAvailable ? '' : 'occupied'); ?>">
+                                <?php
+                                if ($isUnderMaintenance) {
+                                    echo 'Under Maintenance';
+                                } else {
+                                    echo $isAvailable ? 'Currently Available' : 'Currently Occupied';
+                                }
+                                ?>
                         </div>
                     </div>
                 </div>
                 <div class="status-indicator">
-                        <div class="indicator-dot <?php echo $isAvailable ? '' : 'occupied'; ?>">
+                        <div class="indicator-dot <?php echo $isUnderMaintenance ? 'occupied' : ($isAvailable ? '' : 'occupied'); ?>">
                             <div class="dot"></div>
                         </div>
                 </div>
@@ -1130,6 +1141,7 @@ body {
     </div>
 
     <!-- Extended Schedule Section -->
+<?php if (!$isUnderMaintenance): ?>
     <div class="extended-schedule">
         <div class="extended-schedule-title">
             <div class="text"><?php echo date('F j, Y', strtotime($selectedDate)); ?> Schedule</div>
@@ -1185,14 +1197,18 @@ body {
                 </div>
             </div>
         </div>
+<?php endif; ?>
 
         <!-- Bottom Book Button -->
+<?php if (!$isUnderMaintenance): ?>
     <div class="bottom-button-container">
-        <div class="bottom-button-wrapper">            <button class="bottom-book-button" onclick="bookThisRoom('<?php echo htmlspecialchars($room['_id']); ?>')">
+        <div class="bottom-button-wrapper">
+            <button class="bottom-book-button" onclick="bookThisRoom('<?php echo htmlspecialchars($room['_id']); ?>')">
                 <div class="text">Book this room</div>
             </button>
         </div>
     </div>
+<?php endif; ?>
 </div>
 
 <!-- Footer -->

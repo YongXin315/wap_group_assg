@@ -613,7 +613,14 @@ body, html {
 
     function viewRoomDetails(roomId, event) {
         event.stopPropagation(); // Prevents triggering parent click events if any
-        window.location.href = 'roomdetails.php?room_id=' + encodeURIComponent(roomId);
+        // Use the selected date from the date picker if available
+        var dateInput = document.querySelector('.date-picker-input');
+        var selectedDate = dateInput ? dateInput.value.split('T')[0] : '';
+        var url = 'roomdetails.php?room_id=' + encodeURIComponent(roomId);
+        if (selectedDate) {
+            url += '&date=' + encodeURIComponent(selectedDate);
+        }
+        window.location.href = url;
     }
 
     const initialDate      = '<?php echo $selectedDate; ?>';

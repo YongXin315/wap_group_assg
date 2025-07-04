@@ -547,7 +547,7 @@ body, html {
 
                 <!-- Cancel Link -->
                 <div class="cancel-section">
-                    <a href="roomdetails.php?room_id=<?php echo urlencode($roomId); ?>" class="cancel-link">← Cancel</a>
+                    <a href="roomdetails.php?room_id=<?php echo urlencode($roomId); ?>&date=<?php echo urlencode($selectedDate); ?>" class="cancel-link">← Cancel</a>
                 </div>
             </div>
         </div>

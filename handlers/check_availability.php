@@ -34,6 +34,10 @@ if (!$room) {
     echo json_encode(['available' => false, 'reason' => 'Room not found']);
     exit;
 }
+if (isset($room['status']) && strtolower($room['status']) !== 'available') {
+    echo json_encode(['available' => false, 'reason' => 'Room is under maintenance']);
+    exit;
+}
 
 $isDiscussionRoom = (stripos($room['type'], 'discussion') !== false);
 
