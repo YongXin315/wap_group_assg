@@ -220,19 +220,47 @@ body, html {
                 <div id="roomsContainer">
                 <?php
                 try {
-                    // Get all room types from database
+                    // Get all room types from database and sort them
                     $roomTypes = $db->rooms->distinct('type');
+                    sort($roomTypes); // Sort room types alphabetically
                     
                     if (empty($roomTypes)) {
-                        $roomTypes = ['Discussion Room', 'Lecture Hall', 'Computer Lab', 'Study Room'];
+                        $roomTypes = ['Computer Lab', 'Discussion Room', 'Lecture Hall', 'Study Room'];
                     }
                     
                     // First pass: Check which room types have available rooms
                     $roomTypesWithAvailableRooms = [];
                     
                     foreach ($roomTypes as $roomType) {
-                        // Get rooms of this type
-                        $rooms = $db->rooms->find(['type' => $roomType]);
+                        // Get rooms of this type and sort them
+                        $roomsCursor = $db->rooms->find(['type' => $roomType]);
+                        $rooms = iterator_to_array($roomsCursor);
+                        
+                        // Sort rooms based on type
+                        if ($roomType === 'Lecture Theatre') {
+                            // Sort Lecture Theatre numerically
+                            usort($rooms, function($a, $b) {
+                                $nameA = isset($a['room_name']) ? $a['room_name'] : '';
+                                $nameB = isset($b['room_name']) ? $b['room_name'] : '';
+                                
+                                // Extract numbers from room names (e.g., "Lecture Theatre 1" -> 1)
+                                preg_match('/(\d+)/', $nameA, $matchesA);
+                                preg_match('/(\d+)/', $nameB, $matchesB);
+                                
+                                $numA = isset($matchesA[1]) ? (int)$matchesA[1] : 0;
+                                $numB = isset($matchesB[1]) ? (int)$matchesB[1] : 0;
+                                
+                                return $numA - $numB; // Numeric comparison for Lecture Theatre
+                            });
+                        } else {
+                            // Sort other room types alphabetically
+                            usort($rooms, function($a, $b) {
+                                $nameA = isset($a['room_name']) ? $a['room_name'] : '';
+                                $nameB = isset($b['room_name']) ? $b['room_name'] : '';
+                                return strnatcasecmp($nameA, $nameB);
+                            });
+                        }
+                        
                         $hasAvailableRooms = false;
                         
                         foreach ($rooms as $room) {
@@ -312,8 +340,35 @@ body, html {
                     
                     // Second pass: Display only room types that have available rooms
                     foreach ($roomTypesWithAvailableRooms as $roomType) {
-                        // Get rooms of this type
-                        $rooms = $db->rooms->find(['type' => $roomType]);
+                        // Get rooms of this type and sort them
+                        $roomsCursor = $db->rooms->find(['type' => $roomType]);
+                        $rooms = iterator_to_array($roomsCursor);
+                        
+                        // Sort rooms based on type
+                        if ($roomType === 'Lecture Theatre') {
+                            // Sort Lecture Theatre numerically
+                            usort($rooms, function($a, $b) {
+                                $nameA = isset($a['room_name']) ? $a['room_name'] : '';
+                                $nameB = isset($b['room_name']) ? $b['room_name'] : '';
+                                
+                                // Extract numbers from room names (e.g., "Lecture Theatre 1" -> 1)
+                                preg_match('/(\d+)/', $nameA, $matchesA);
+                                preg_match('/(\d+)/', $nameB, $matchesB);
+                                
+                                $numA = isset($matchesA[1]) ? (int)$matchesA[1] : 0;
+                                $numB = isset($matchesB[1]) ? (int)$matchesB[1] : 0;
+                                
+                                return $numA - $numB; // Numeric comparison for Lecture Theatre
+                            });
+                        } else {
+                            // Sort other room types alphabetically
+                            usort($rooms, function($a, $b) {
+                                $nameA = isset($a['room_name']) ? $a['room_name'] : '';
+                                $nameB = isset($b['room_name']) ? $b['room_name'] : '';
+                                return strnatcasecmp($nameA, $nameB);
+                            });
+                        }
+                        
                         $roomCount = 0;
                         $roomCardsHtml = '';
                         foreach ($rooms as $room) {

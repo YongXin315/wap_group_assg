@@ -34,54 +34,25 @@ try {
     $room = $db->rooms->findOne(['_id' => $roomId]);
     
     if (!$room) {
-        // Fallback to static data if room not found
-        $room = [
-            '_id' => $roomId,
-            'room_name' => $roomId,
-            'type' => 'Classroom',
-            'block' => 'Block D',
-            'floor' => 'Level 8',
-            'capacity' => '30-40 persons',
-            'amenities' => 'Whiteboard, Projector, Air-conditioning',
-            'class_timetable' => []
-        ];
+        echo "<div class='error-message'>Room does not exist.</div>";
+        include_once 'component/footer.php';
+        exit;
     } else {
         // Convert MongoDB document to array - don't overwrite actual data with fallbacks
         $room = $room->getArrayCopy();
     }
 } catch (Exception $e) {
-    // Fallback to static data if database error
-    $room = [
-        '_id' => $roomId,
-        'room_name' => $roomId,
-        'type' => 'Classroom',
-        'block' => 'Block D',
-        'floor' => 'Level 8',
-        'capacity' => '30-40 persons',
-        'amenities' => 'Whiteboard, Projector, Air-conditioning',
-        'class_timetable' => []
-    ];
+    echo "<div class='error-message'>Room does not exist or database error.</div>";
+    include_once 'component/footer.php';
+    exit;
 }
 
 // ============================================================================
 // OCCUPANCY SETTINGS
 // ============================================================================
 // Set min/max occupancy from DB or fallback
-if (isset($room['min_occupancy'])) {
-    $minOccupancy = (int)$room['min_occupancy'];
-} elseif (stripos($room['type'], 'Discussion Room') !== false && preg_match('/(\d+)[^\d]+(\d+)/', $room['capacity'], $matches)) {
-    $minOccupancy = (int)$matches[1];
-} else {
-    $minOccupancy = 1;
-}
-
-if (isset($room['max_occupancy'])) {
-    $maxOccupancy = (int)$room['max_occupancy'];
-} elseif (stripos($room['type'], 'Discussion Room') !== false && preg_match('/(\d+)[^\d]+(\d+)/', $room['capacity'], $matches)) {
-    $maxOccupancy = (int)$matches[2];
-} else {
-    $maxOccupancy = 50;
-}
+$minOccupancy = isset($room['min_occupancy']) ? (int)$room['min_occupancy'] : null;
+$maxOccupancy = isset($room['max_occupancy']) ? (int)$room['max_occupancy'] : null;
 
 $roomIdForQuery = isset($room['_id']) ? $room['_id'] : $roomId;
 
@@ -114,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validate required fields
     if (empty($studentId) || empty($fullName) || empty($bookingDate) || empty($startTime) || empty($endTime) || empty($purpose) || empty($numPeople) || empty($roomId)) {
         $bookingError = 'Please fill in all required fields.';
-    } else if ((int)$numPeople < $minOccupancy || (int)$numPeople > $maxOccupancy) {
+    } else if ($minOccupancy !== null && ($numPeople < $minOccupancy || $numPeople > $maxOccupancy)) {
         $bookingError = 'Number of people must be between ' . $minOccupancy . ' and ' . $maxOccupancy . '.';
     } else if (stripos($room['type'], 'Discussion Room') !== false) {
         // Student ID validation for Discussion Room
@@ -235,7 +206,7 @@ $isCurrentDate = ($selectedDate === $currentDate);
 // TIME RANGE CALCULATION
 // ============================================================================
 function getTimeRange($roomType, $dayOfWeek, $isCurrentDate, $currentHour) {
-    $isDiscussionRoom = (stripos($roomType, 'discussion') !== false);
+    $isDiscussionRoom = (stripos($roomType, 'Discussion Room') !== false);
     
     if ($isDiscussionRoom) {
         if ($dayOfWeek === 'Saturday') {
@@ -413,6 +384,18 @@ body, html {
                                     </div>
                                 </div>
                             </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Capacity</div>
+                                <div class="summary-value">
+                                    <?php
+                                    if ($minOccupancy !== null && $maxOccupancy !== null) {
+                                        echo htmlspecialchars($minOccupancy) . ' - ' . htmlspecialchars($maxOccupancy) . ' persons';
+                                    } else {
+                                        echo '-';
+                                    }
+                                    ?>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -479,8 +462,16 @@ body, html {
                                 // End time starts from start time + 1 hour, up to closing time
                                 $defaultEndHour = min($endHour, $selectedHour + 1);
 
-                                // Generate time options from start time + 1 hour to closing time
-                                for ($hour = $defaultEndHour; $hour <= $endHour; $hour++) {
+                                // For discussion rooms, limit to maximum 2 hours
+                                $isDiscussionRoom = (stripos($room['type'], 'Discussion Room') !== false);
+                                if ($isDiscussionRoom) {
+                                    $maxEndHour = min($endHour, $selectedHour + 2); // 2 hours max for discussion rooms
+                                } else {
+                                    $maxEndHour = $endHour; // No limit for other room types
+                                }
+
+                                // Generate time options from start time + 1 hour to max end hour
+                                for ($hour = $defaultEndHour; $hour <= $maxEndHour; $hour++) {
                                     $time = sprintf('%02d:00', $hour);
                                     $displayTime = date('g:i A', strtotime($time));
                                     echo "<option value=\"$time\">$displayTime</option>";
@@ -504,16 +495,27 @@ body, html {
                                    placeholder="Enter the Purpose" required>
                         </div>
                     </div>
+                    <?php if (stripos($room['type'], 'Discussion Room') !== false): ?>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="num_people" class="form-label">Number of People</label>
                             <input type="number" id="num_people" name="num_people" class="form-input"
-                                min="<?php echo $minOccupancy; ?>"
-                                max="<?php echo $maxOccupancy; ?>"
+                                <?php if ($minOccupancy !== null) echo 'min="' . $minOccupancy . '"'; ?>
+                                <?php if ($maxOccupancy !== null) echo 'max="' . $maxOccupancy . '"'; ?>
                                 placeholder="Enter number of people" required>
-                            <small>Allowed: <?php echo $minOccupancy; ?> to <?php echo $maxOccupancy; ?> people</small>
+                            <small>
+                                Allowed: 
+                                <?php
+                                if ($minOccupancy !== null && $maxOccupancy !== null) {
+                                    echo $minOccupancy . ' to ' . $maxOccupancy . ' people';
+                                } else {
+                                    echo '-';
+                                }
+                                ?>
+                            </small>
                         </div>
                     </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Student IDs Section (Discussion Rooms Only) -->
@@ -580,63 +582,90 @@ const roomId = '<?php echo htmlspecialchars($roomId); ?>';
 // ============================================================================
 
 // Auto-fill hidden form when visible inputs change
-document.getElementById('student_id').addEventListener('input', function() {
-    document.getElementById('hidden_student_id').value = this.value;
-});
+const studentIdInput = document.getElementById('student_id');
+if (studentIdInput) {
+    studentIdInput.addEventListener('input', function() {
+        document.getElementById('hidden_student_id').value = this.value;
+    });
+}
 
-document.getElementById('full_name').addEventListener('input', function() {
-    document.getElementById('hidden_full_name').value = this.value;
-});
+const fullNameInput = document.getElementById('full_name');
+if (fullNameInput) {
+    fullNameInput.addEventListener('input', function() {
+        document.getElementById('hidden_full_name').value = this.value;
+    });
+}
 
-document.getElementById('purpose').addEventListener('input', function() {
-    document.getElementById('hidden_purpose').value = this.value;
-});
+const purposeInput = document.getElementById('purpose');
+if (purposeInput) {
+    purposeInput.addEventListener('input', function() {
+        document.getElementById('hidden_purpose').value = this.value;
+    });
+}
 
-document.getElementById('num_people').addEventListener('input', function() {
-    document.getElementById('hidden_num_people').value = this.value;
-    updateStudentIdFields();
-});
+const numPeopleInput = document.getElementById('num_people');
+if (numPeopleInput) {
+    numPeopleInput.addEventListener('input', function() {
+        document.getElementById('hidden_num_people').value = this.value;
+        updateStudentIdFields();
+    });
+}
 
 // Date change event - update time options dynamically
-document.getElementById('booking_date').addEventListener('change', function() {
-    updateSummaryDate();
-    updateTimeOptions();
-    updateEndTimeOptions();
-    checkAvailability();
-});
+const bookingDateInput = document.getElementById('booking_date');
+if (bookingDateInput) {
+    bookingDateInput.addEventListener('change', function() {
+        updateSummaryDate();
+        updateTimeOptions();
+        updateEndTimeOptions();
+        checkAvailability();
+    });
+}
 
 // Start time change event
-document.getElementById('start_time').addEventListener('change', function() {
-    document.getElementById('hidden_start_time').value = this.value;
-    updateEndTimeOptions();
-    checkAvailability();
-});
+const startTimeInput = document.getElementById('start_time');
+if (startTimeInput) {
+    startTimeInput.addEventListener('change', function() {
+        document.getElementById('hidden_start_time').value = this.value;
+        updateEndTimeOptions();
+        checkAvailability();
+    });
+}
 
 // End time change event
-document.getElementById('end_time').addEventListener('change', function() {
-    document.getElementById('hidden_end_time').value = this.value;
-    checkAvailability();
-});
+const endTimeInput = document.getElementById('end_time');
+if (endTimeInput) {
+    endTimeInput.addEventListener('change', function() {
+        document.getElementById('hidden_end_time').value = this.value;
+        checkAvailability();
+    });
+}
 
 // Submit button event
-document.querySelector('.submit-button').addEventListener('click', function(e) {
-    e.preventDefault();
-    submitBooking();
-});
+const submitButton = document.querySelector('.submit-button');
+if (submitButton) {
+    submitButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        submitBooking();
+    });
+}
 
 // Room name link click event
-document.getElementById('room-name-link').addEventListener('click', function() {
-    const date = document.getElementById('booking_date').value;
-    const time = document.getElementById('start_time').value;
-    let url = "roomdetails.php?room_id=" + roomId;
-    if (date) {
-        url += "&date=" + encodeURIComponent(date);
-    }
-    if (time) {
-        url += "&time=" + encodeURIComponent(time);
-    }
-    window.location.href = url;
-});
+const roomNameLink = document.getElementById('room-name-link');
+if (roomNameLink) {
+    roomNameLink.addEventListener('click', function() {
+        const date = document.getElementById('booking_date').value;
+        const time = document.getElementById('start_time').value;
+        let url = "roomdetails.php?room_id=" + roomId;
+        if (date) {
+            url += "&date=" + encodeURIComponent(date);
+        }
+        if (time) {
+            url += "&time=" + encodeURIComponent(time);
+        }
+        window.location.href = url;
+    });
+}
 
 // ============================================================================
 // CORE FUNCTIONS
@@ -646,7 +675,12 @@ document.getElementById('room-name-link').addEventListener('click', function() {
  * Update the summary date display
  */
 function updateSummaryDate() {
-    const selectedDate = document.getElementById('booking_date').value;
+    const bookingDateInput = document.getElementById('booking_date');
+    const summaryDateValue = document.getElementById('summary-date-value');
+    
+    if (!bookingDateInput || !summaryDateValue) return;
+    
+    const selectedDate = bookingDateInput.value;
     if (selectedDate) {
         const dateObj = new Date(selectedDate);
         const formattedDate = dateObj.toLocaleDateString('en-US', { 
@@ -654,7 +688,7 @@ function updateSummaryDate() {
             month: 'long', 
             day: 'numeric' 
         });
-        document.getElementById('summary-date-value').textContent = formattedDate;
+        summaryDateValue.textContent = formattedDate;
     }
 }
 
@@ -664,7 +698,13 @@ function updateSummaryDate() {
 function updateTimeOptions() {
     console.log('updateTimeOptions called');
     
-    const selectedDate = document.getElementById('booking_date').value;
+    const bookingDateInput = document.getElementById('booking_date');
+    const startTimeSelect = document.getElementById('start_time');
+    const endTimeSelect = document.getElementById('end_time');
+    
+    if (!bookingDateInput || !startTimeSelect || !endTimeSelect) return;
+    
+    const selectedDate = bookingDateInput.value;
     const today = new Date();
     const selected = new Date(selectedDate);
     const isCurrentDate = (selected.toDateString() === today.toDateString());
@@ -677,10 +717,6 @@ function updateTimeOptions() {
     const timeRange = getTimeRange(roomType, dayOfWeek, isCurrentDate, currentHour);
     const startHour = timeRange.start;
     const endHour = timeRange.end;
-    
-    // Get select elements
-    const startTimeSelect = document.getElementById('start_time');
-    const endTimeSelect = document.getElementById('end_time');
     
     // Clear existing options
     startTimeSelect.innerHTML = '<option value="">Select start time</option>';
@@ -704,8 +740,13 @@ function updateTimeOptions() {
         startTimeSelect.appendChild(option);
     }
     
+    // For discussion rooms, limit to maximum 2 hours
+    const isDiscussionRoom = roomType.toLowerCase().includes('discussion');
+    const maxBookingHours = isDiscussionRoom ? 2 : 14; // 2 hours for discussion rooms, 14 hours for others
+    const maxEndHour = Math.min(endHour, startHour + maxBookingHours);
+    
     // Generate end time options
-    for (let hour = startHour + 1; hour <= endHour; hour++) {
+    for (let hour = startHour + 1; hour <= maxEndHour; hour++) {
         const time = hour.toString().padStart(2, '0') + ':00';
         const displayTime = new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
             hour: 'numeric',
@@ -723,16 +764,24 @@ function updateTimeOptions() {
     }
     
     // Update hidden form values
-    document.getElementById('hidden_start_time').value = startTimeSelect.value;
-    document.getElementById('hidden_end_time').value = endTimeSelect.value;
+    const hiddenStartTime = document.getElementById('hidden_start_time');
+    const hiddenEndTime = document.getElementById('hidden_end_time');
+    if (hiddenStartTime) hiddenStartTime.value = startTimeSelect.value;
+    if (hiddenEndTime) hiddenEndTime.value = endTimeSelect.value;
 }
 
 /**
  * Update end time options based on selected start time
  */
 function updateEndTimeOptions() {
-    const selectedDate = document.getElementById('booking_date').value;
-    const startTime = document.getElementById('start_time').value;
+    const bookingDateInput = document.getElementById('booking_date');
+    const startTimeInput = document.getElementById('start_time');
+    const endTimeSelect = document.getElementById('end_time');
+    
+    if (!bookingDateInput || !startTimeInput || !endTimeSelect) return;
+    
+    const selectedDate = bookingDateInput.value;
+    const startTime = startTimeInput.value;
     const today = new Date();
     const selected = new Date(selectedDate);
     const isCurrentDate = (selected.toDateString() === today.toDateString());
@@ -745,9 +794,6 @@ function updateEndTimeOptions() {
     const timeRange = getTimeRange(roomType, dayOfWeek, isCurrentDate, currentHour);
     const endHour = timeRange.end;
     
-    // Get end time select
-    const endTimeSelect = document.getElementById('end_time');
-    
     // Clear existing options
     endTimeSelect.innerHTML = '<option value="">Select end time</option>';
     
@@ -756,8 +802,13 @@ function updateEndTimeOptions() {
         const startHour = parseInt(startTime.split(':')[0]);
         const minEndHour = startHour + 1; // At least 1 hour after start time
         
-        // Generate end time options from start time + 1 hour to closing time
-        for (let hour = minEndHour; hour <= endHour; hour++) {
+        // For discussion rooms, limit to maximum 2 hours
+        const isDiscussionRoom = roomType.toLowerCase().includes('discussion');
+        const maxBookingHours = isDiscussionRoom ? 2 : 14; // 2 hours for discussion rooms, 14 hours for others
+        const maxEndHour = Math.min(endHour, startHour + maxBookingHours);
+        
+        // Generate end time options from start time + 1 hour to max end hour
+        for (let hour = minEndHour; hour <= maxEndHour; hour++) {
             const time = hour.toString().padStart(2, '0') + ':00';
             const displayTime = new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
                 hour: 'numeric',
@@ -775,7 +826,8 @@ function updateEndTimeOptions() {
         }
         
         // Update hidden form value
-        document.getElementById('hidden_end_time').value = endTimeSelect.value;
+        const hiddenEndTime = document.getElementById('hidden_end_time');
+        if (hiddenEndTime) hiddenEndTime.value = endTimeSelect.value;
     }
 }
 
@@ -812,12 +864,19 @@ function getTimeRange(roomType, dayOfWeek, isCurrentDate, currentHour) {
  * Check availability for selected time slot
  */
 function checkAvailability() {
-    const selectedDate = document.getElementById('booking_date').value;
-    const startTime = document.getElementById('start_time').value;
-    const endTime = document.getElementById('end_time').value;
-    
+    const bookingDateInput = document.getElementById('booking_date');
+    const startTimeInput = document.getElementById('start_time');
+    const endTimeInput = document.getElementById('end_time');
     const statusDisplay = document.getElementById('availability-status');
+    
+    if (!bookingDateInput || !startTimeInput || !endTimeInput || !statusDisplay) return;
+    
+    const selectedDate = bookingDateInput.value;
+    const startTime = startTimeInput.value;
+    const endTime = endTimeInput.value;
+    
     const statusMessage = statusDisplay.querySelector('.status-message');
+    if (!statusMessage) return;
     
     if (!selectedDate || !startTime || !endTime) {
         statusMessage.textContent = 'Select a date and time to check availability';
@@ -879,12 +938,12 @@ function checkTimeSlotAvailability(date, startTime, endTime) {
     xhr.open("GET", url, false); // synchronous for simplicity
     
     try {
-    xhr.send();
+        xhr.send();
 
-    if (xhr.status === 200) {
+        if (xhr.status === 200) {
             const result = JSON.parse(xhr.responseText);
             return result;
-            } else {
+        } else {
             console.error('Availability check failed with status:', xhr.status);
             return { available: false, reason: 'Server error: ' + xhr.status };
         }
@@ -900,13 +959,32 @@ function checkTimeSlotAvailability(date, startTime, endTime) {
 function submitBooking() {
     // Collect form data
     const formData = new FormData();
-    formData.append('student_id', document.getElementById('student_id').value);
-    formData.append('full_name', document.getElementById('full_name').value);
-    formData.append('booking_date', document.getElementById('booking_date').value);
-    formData.append('start_time', document.getElementById('start_time').value);
-    formData.append('end_time', document.getElementById('end_time').value);
-    formData.append('purpose', document.getElementById('purpose').value);
-    formData.append('num_people', document.getElementById('num_people').value);
+    
+    const studentIdInput = document.getElementById('student_id');
+    const fullNameInput = document.getElementById('full_name');
+    const bookingDateInput = document.getElementById('booking_date');
+    const startTimeInput = document.getElementById('start_time');
+    const endTimeInput = document.getElementById('end_time');
+    const purposeInput = document.getElementById('purpose');
+    const numPeopleInput = document.getElementById('num_people');
+    
+    if (!studentIdInput || !fullNameInput || !bookingDateInput || !startTimeInput || !endTimeInput || !purposeInput) {
+        alert('Please fill in all required fields.');
+        return;
+    }
+    
+    formData.append('student_id', studentIdInput.value);
+    formData.append('full_name', fullNameInput.value);
+    formData.append('booking_date', bookingDateInput.value);
+    formData.append('start_time', startTimeInput.value);
+    formData.append('end_time', endTimeInput.value);
+    formData.append('purpose', purposeInput.value);
+    
+    if (numPeopleInput) {
+        formData.append('num_people', numPeopleInput.value);
+    } else {
+        formData.append('num_people', '1'); // Default for non-discussion rooms
+    }
     
     const studentIdInputs = document.querySelectorAll('input[name="student_ids[]"]');
     if (studentIdInputs.length > 0) {
@@ -947,9 +1025,12 @@ function submitBooking() {
  * Update student ID fields for discussion rooms
  */
 function updateStudentIdFields() {
-    const numPeople = parseInt(document.getElementById('num_people').value) || 0;
-    const min = <?php echo $minOccupancy; ?>;
-    const max = <?php echo $maxOccupancy; ?>;
+    const numPeopleInput = document.getElementById('num_people');
+    if (!numPeopleInput) return; // Exit if num_people input doesn't exist
+    
+    const numPeople = parseInt(numPeopleInput.value) || 0;
+    const min = <?php echo $minOccupancy !== null ? $minOccupancy : 'null'; ?>;
+    const max = <?php echo $maxOccupancy !== null ? $maxOccupancy : 'null'; ?>;
     const container = document.getElementById('student-ids-container');
     const row = document.getElementById('student-ids-row');
     const hint = document.getElementById('student-ids-hint');
@@ -959,7 +1040,7 @@ function updateStudentIdFields() {
     container.innerHTML = '';
     hint.textContent = '';
 
-    if (numPeople >= min && numPeople <= max) {
+    if (min !== null && max !== null && numPeople >= min && numPeople <= max) {
         row.style.display = '';
         for (let i = 1; i <= numPeople; i++) {
             const input = document.createElement('input');
@@ -983,12 +1064,25 @@ function updateStudentIdFields() {
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
     // Seed hidden fields for form submission
-    document.getElementById('hidden_booking_date').value = document.getElementById('booking_date').value;
-    document.getElementById('hidden_start_time').value = document.getElementById('start_time').value;
-    document.getElementById('hidden_end_time').value = document.getElementById('end_time').value;
+    const bookingDateInput = document.getElementById('booking_date');
+    const startTimeInput = document.getElementById('start_time');
+    const endTimeInput = document.getElementById('end_time');
+    const hiddenBookingDate = document.getElementById('hidden_booking_date');
+    const hiddenStartTime = document.getElementById('hidden_start_time');
+    const hiddenEndTime = document.getElementById('hidden_end_time');
+    
+    if (bookingDateInput && hiddenBookingDate) {
+        hiddenBookingDate.value = bookingDateInput.value;
+    }
+    if (startTimeInput && hiddenStartTime) {
+        hiddenStartTime.value = startTimeInput.value;
+    }
+    if (endTimeInput && hiddenEndTime) {
+        hiddenEndTime.value = endTimeInput.value;
+    }
 
     // Initialize student ID fields if needed
-updateStudentIdFields();
+    updateStudentIdFields();
     
     // Check availability immediately
     checkAvailability();

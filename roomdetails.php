@@ -15,46 +15,15 @@ if (empty($roomId)) {
 try {
     $room = $db->rooms->findOne(['_id' => $roomId]);
     if (!$room) {
-        // Fallback to static data if room not found
-        $room = [
-            '_id' => $roomId,
-            'room_name' => $roomId,
-            'type' => 'Computer Lab',
-            'block' => 'Block D',
-            'floor' => 'Level 7.14',
-            'capacity' => '21-30 persons',
-            'amenities' => 'Whiteboard, TV screen, Air-conditioning, Computers',
-            'class_timetable' => [],
-            'status' => 'Available' // Added status field
-        ];
-    } else {
-        // Convert MongoDB document to array and ensure all required fields exist
-        $roomArray = $room->getArrayCopy();
-        $room = array_merge([
-            '_id' => $roomId,
-            'room_name' => $roomId,
-            'type' => 'Computer Lab',
-            'block' => 'Block D',
-            'floor' => 'Level 7.14',
-            'capacity' => '21-30 persons',
-            'amenities' => 'Whiteboard, TV screen, Air-conditioning, Computers',
-            'class_timetable' => [],
-            'status' => 'Available' // Added status field
-        ], $roomArray);
+        echo "<div class='error-message'>Room does not exist.</div>";
+        include_once 'component/footer.php';
+        exit;
     }
+    $room = $room->getArrayCopy();
 } catch (Exception $e) {
-    // Fallback to static data if database error
-    $room = [
-        '_id' => $roomId,
-        'room_name' => $roomId,
-        'type' => 'Computer Lab',
-        'block' => 'Block D',
-        'floor' => 'Level 7.14',
-        'capacity' => '21-30 persons',
-        'amenities' => 'Whiteboard, TV screen, Air-conditioning, Computers',
-        'class_timetable' => [],
-        'status' => 'Available' // Added status field
-    ];
+    echo "<div class='error-message'>Room does not exist or database error.</div>";
+    include_once 'component/footer.php';
+    exit;
 }
 
 // Get current date and time
@@ -1057,7 +1026,15 @@ body {
                                 <div class="text">Capacity</div>
                             </div>
                             <div class="detail-value">
-                                <div class="text"><?php echo htmlspecialchars($room['capacity']); ?></div>
+                                <div class="text">
+                                    <?php
+                                    if (isset($room['min_occupancy']) && isset($room['max_occupancy'])) {
+                                        echo htmlspecialchars($room['min_occupancy']) . ' - ' . htmlspecialchars($room['max_occupancy']) . ' persons';
+                                    } else {
+                                        echo '-';
+                                    }
+                                    ?>
+                                </div>
                             </div>
                     </div>
                 </div>

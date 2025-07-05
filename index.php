@@ -9,10 +9,12 @@ date_default_timezone_set('Asia/Kuala_Lumpur');
 require_once 'db.php';
 require_once 'component/header.php';
 
-// Get room types from MongoDB
+// Get room types from MongoDB and sort them
 $roomTypes = [];
 try {
     $roomTypes = $db->rooms->distinct('type');
+    // Sort room types alphabetically
+    sort($roomTypes);
 } catch (Exception $e) {
     echo "<script>console.error('Error fetching room types: " . addslashes($e->getMessage()) . "');</script>";
 }
@@ -28,6 +30,32 @@ try {
 } catch (Exception $e) {
     echo "<script>console.error('Error fetching rooms: " . addslashes($e->getMessage()) . "');</script>";
 }
+
+// Sort rooms by room_name in ascending order
+usort($rooms, function($a, $b) {
+    // Get room names, fallback to _id if room_name is not available
+    $nameA = isset($a['room_name']) ? $a['room_name'] : (string)$a['_id'];
+    $nameB = isset($b['room_name']) ? $b['room_name'] : (string)$b['_id'];
+    
+    // Get room types for special sorting
+    $typeA = isset($a['type']) ? $a['type'] : '';
+    $typeB = isset($b['type']) ? $b['type'] : '';
+    
+    // If both are Lecture Theatre, sort numerically
+    if ($typeA === 'Lecture Theatre' && $typeB === 'Lecture Theatre') {
+        // Extract numbers from room names (e.g., "Lecture Theatre 1" -> 1)
+        preg_match('/(\d+)/', $nameA, $matchesA);
+        preg_match('/(\d+)/', $nameB, $matchesB);
+        
+        $numA = isset($matchesA[1]) ? (int)$matchesA[1] : 0;
+        $numB = isset($matchesB[1]) ? (int)$matchesB[1] : 0;
+        
+        return $numA - $numB; // Numeric comparison for Lecture Theatre
+    }
+    
+    // For other room types, use natural string comparison
+    return strnatcasecmp($nameA, $nameB);
+});
 ?>
 
 <style>
@@ -399,7 +427,15 @@ window.addEventListener('DOMContentLoaded', function() {
                         </a>
                     </h3>
                     <p>Block <?php echo isset($room['block']) ? htmlspecialchars($room['block']) : ''; ?>, 
-                        Floor <?php echo isset($room['floor']) ? htmlspecialchars($room['floor']) : ''; ?></p>
+                        Floor <?php echo isset($room['floor']) ? htmlspecialchars($room['floor']) : ''; ?>
+                        <br>Capacity: <?php
+                            if (isset($room['min_occupancy']) && isset($room['max_occupancy'])) {
+                                echo htmlspecialchars($room['min_occupancy']) . ' - ' . htmlspecialchars($room['max_occupancy']) . ' persons';
+                            } else {
+                                echo '-';
+                            }
+                        ?>
+                    </p>
                     <div class="room-availability">Available for booking</div>
                 </div>
             </div>

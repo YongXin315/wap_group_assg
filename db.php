@@ -23,5 +23,4 @@ $client = new Client($uri, [
     'connectTimeoutMS' => 10000,
 ]);
 
-// Choose your database (changed from 'taylors' to 'wap_system')
 $db = $client->wap_system;
