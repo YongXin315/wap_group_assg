@@ -48,6 +48,12 @@ $eveningTimeSlots = [
     '04:00 - 05:00', '05:00 - 06:00', '06:00 - 07:00', '07:00 - 08:00'
 ];
 
+// Create mapping for evening time slots
+$eveningTimeSlotMap = [];
+foreach ($eveningTimeSlots as $idx => $slot) {
+    $eveningTimeSlotMap[$slot] = $idx;
+}
+
 // Get the day of week for the selected date
 $selectedDayOfWeek = date('l', strtotime($selectedDate));
 
@@ -98,12 +104,15 @@ $approvedBookings = $db->bookings->find([
     'status' => 'approved'
 ])->toArray();
 
-$pendingBookings = $db->bookings->find([
-    'room_id' => $room['_id'],
-    'booking_date' => $selectedDate,
-    'status' => 'pending',
-    'student_id' => $_SESSION['student_id']
-])->toArray();
+$pendingBookings = [];
+if (isset($_SESSION['student_id'])) {
+    $pendingBookings = $db->bookings->find([
+        'room_id' => $room['_id'],
+        'booking_date' => $selectedDate,
+        'status' => 'pending',
+        'student_id' => $_SESSION['student_id']
+    ])->toArray();
+}
 
 // Mark slots as Occupied by class timetable
 foreach ($timeSlots as $idx => $slot) {
@@ -134,6 +143,23 @@ foreach ($timeSlots as $idx => $slot) {
         $bookingEndDateTime = new DateTime($selectedDate . ' ' . $booking['end_time']);
         if ($slotStartDateTime < $bookingEndDateTime && $slotEndDateTime > $bookingStartDateTime) {
             $availabilityStatus[$idx] = 'Booked';
+            break;
+        }
+    }
+}
+
+// Mark slots as Requested by pending bookings by current user (if not already Occupied or Booked)
+foreach ($timeSlots as $idx => $slot) {
+    if ($availabilityStatus[$idx] === 'Occupied' || $availabilityStatus[$idx] === 'Booked') continue;
+    list($slotStart, $slotEnd) = explode(' - ', $slot);
+    $slotStartDateTime = new DateTime($selectedDate . ' ' . $slotStart);
+    $slotEndDateTime = new DateTime($selectedDate . ' ' . $slotEnd);
+
+    foreach ($pendingBookings as $booking) {
+        $bookingStartDateTime = new DateTime($selectedDate . ' ' . $booking['start_time']);
+        $bookingEndDateTime = new DateTime($selectedDate . ' ' . $booking['end_time']);
+        if ($slotStartDateTime < $bookingEndDateTime && $slotEndDateTime > $bookingStartDateTime) {
+            $availabilityStatus[$idx] = 'Requested';
             break;
         }
     }

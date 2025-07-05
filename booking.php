@@ -109,6 +109,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
+    // Check if user already has any pending bookings
+    if (empty($bookingError)) {
+        $pendingBooking = $db->bookings->findOne([
+            'student_id' => $studentId,
+            'status' => 'pending'
+        ]);
+        if ($pendingBooking) {
+            $bookingError = 'You already have a pending booking request. Please wait for approval or cancel your existing request before making a new one.';
+        }
+    }
+    
     // Check if user already booked a discussion room on the same date
     if (stripos($room['type'], 'Discussion Room') !== false && empty($bookingError)) {
         $existingBooking = $db->bookings->findOne([
@@ -253,6 +264,42 @@ if ($isCurrentDate && (int)date('H') >= $endHour) {
 function to12Hour($time) {
     return date('g:i A', strtotime($time));
 }
+
+// Check if user has pending bookings that conflict with selected datetime
+$hasPendingBookingConflict = false;
+$pendingBookingInfo = null;
+if (isset($_SESSION['student_id'])) {
+    $pendingBooking = $db->bookings->findOne([
+        'student_id' => $_SESSION['student_id'],
+        'status' => 'pending'
+    ]);
+    if ($pendingBooking) {
+        // Check if the pending booking conflicts with the selected date/time
+        $pendingDate = $pendingBooking['booking_date'];
+        $pendingStartTime = $pendingBooking['start_time'];
+        $pendingEndTime = $pendingBooking['end_time'];
+        
+        // If user has selected a date and time, check for conflicts
+        if (!empty($selectedDate) && !empty($selectedTime)) {
+            $selectedEndTime = date('H:i', strtotime($selectedTime . ' +1 hour')); // Default 1 hour booking
+            
+            // Check if dates match and times overlap
+            if ($pendingDate === $selectedDate) {
+                // Check for time overlap
+                $pendingStart = strtotime($pendingStartTime);
+                $pendingEnd = strtotime($pendingEndTime);
+                $selectedStart = strtotime($selectedTime);
+                $selectedEnd = strtotime($selectedEndTime);
+                
+                // Check if times overlap
+                if (($selectedStart < $pendingEnd) && ($selectedEnd > $pendingStart)) {
+                    $hasPendingBookingConflict = true;
+                    $pendingBookingInfo = $pendingBooking;
+                }
+            }
+        }
+    }
+}
 ?>
 
 <?php include_once 'component/header.php'; ?>
@@ -350,6 +397,19 @@ body, html {
     box-shadow: none !important;
     text-decoration: none !important;
 }
+
+/* Disabled button styles */
+.submit-button:disabled {
+    background-color: #cccccc !important;
+    color: #666666 !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+}
+
+.submit-button:disabled:hover {
+    background-color: #cccccc !important;
+    transform: none !important;
+}
 </style>
 
 <!-- ============================================================================
@@ -364,6 +424,26 @@ body, html {
                 <div class="page-title-section">
                     <div class="page-title">Confirm Room Booking</div>
                 </div>
+
+                <!-- Pending Booking Warning -->
+                <?php if ($hasPendingBookingConflict): ?>
+                <div class="warning-section" style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-exclamation-triangle" style="color: #856404; margin-right: 10px;"></i>
+                        <strong style="color: #856404;">Pending Booking Conflict Detected</strong>
+                    </div>
+                    <p style="color: #856404; margin: 0;">
+                        You already have a pending booking request that conflicts with your selected time:
+                        <strong><?php echo htmlspecialchars($pendingBookingInfo['full_name']); ?></strong> on 
+                        <strong><?php echo date('F j, Y', strtotime($pendingBookingInfo['booking_date'])); ?></strong> 
+                        from <strong><?php echo htmlspecialchars($pendingBookingInfo['start_time']); ?></strong> to 
+                        <strong><?php echo htmlspecialchars($pendingBookingInfo['end_time']); ?></strong>.
+                    </p>
+                    <p style="color: #856404; margin: 10px 0 0 0;">
+                        Please wait for approval or <a href="mybookings.php" style="color: #0056b3; text-decoration: underline;">cancel your existing request</a> before making a new booking.
+                    </p>
+                </div>
+                <?php endif; ?>
 
                 <!-- Booking Summary Section -->
                 <div class="summary-section">
@@ -544,7 +624,9 @@ body, html {
 
                 <!-- Submit Button -->
                 <div class="submit-section">
-                    <button type="submit" class="submit-button">Submit Booking</button>
+                    <button type="submit" class="submit-button" <?php echo $hasPendingBookingConflict ? 'disabled' : ''; ?>>
+                        <?php echo $hasPendingBookingConflict ? 'Submit Booking (Disabled - Conflict with Pending Request)' : 'Submit Booking'; ?>
+                    </button>
                 </div>
 
                 <!-- Cancel Link -->
@@ -576,6 +658,7 @@ body, html {
 // ============================================================================
 const roomType = '<?php echo htmlspecialchars($room['type']); ?>';
 const roomId = '<?php echo htmlspecialchars($roomId); ?>';
+const studentId = '<?php echo htmlspecialchars($_SESSION['student_id'] ?? ''); ?>';
 
 // ============================================================================
 // EVENT LISTENERS
@@ -922,7 +1005,89 @@ function checkAvailability() {
             statusMessage.textContent = conflictMessage;
             statusMessage.className = 'status-message unavailable';
         }
+        
+        // Also check for pending booking conflicts
+        checkPendingBookingConflict(selectedDate, startTime, endTime);
     }, 500);
+}
+
+/**
+ * Check for pending booking conflicts
+ */
+function checkPendingBookingConflict(date, startTime, endTime) {
+    if (!studentId) return;
+    
+    const url = "handlers/check_pending_conflict.php?student_id=" + encodeURIComponent(studentId)
+        + "&date=" + encodeURIComponent(date)
+        + "&start_time=" + encodeURIComponent(startTime)
+        + "&end_time=" + encodeURIComponent(endTime);
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const warningSection = document.querySelector('.warning-section');
+            const submitButton = document.querySelector('.submit-button');
+            
+            if (data.hasConflict) {
+                // Show warning
+                if (!warningSection) {
+                    showPendingConflictWarning(data.pendingBooking);
+                }
+                
+                // Disable submit button
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Submit Booking (Disabled - Conflict with Pending Request)';
+                }
+            } else {
+                // Hide warning
+                if (warningSection) {
+                    warningSection.remove();
+                }
+                
+                // Enable submit button
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Submit Booking';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error checking pending booking conflict:', error);
+        });
+}
+
+/**
+ * Show pending booking conflict warning
+ */
+function showPendingConflictWarning(pendingBooking) {
+    const bookingContainer = document.querySelector('.booking-container');
+    if (!bookingContainer) return;
+    
+    const warningHtml = `
+        <div class="warning-section" style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <i class="fas fa-exclamation-triangle" style="color: #856404; margin-right: 10px;"></i>
+                <strong style="color: #856404;">Pending Booking Conflict Detected</strong>
+            </div>
+            <p style="color: #856404; margin: 0;">
+                You already have a pending booking request that conflicts with your selected time:
+                <strong>${pendingBooking.full_name}</strong> on 
+                <strong>${new Date(pendingBooking.booking_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</strong> 
+                from <strong>${pendingBooking.start_time}</strong> to 
+                <strong>${pendingBooking.end_time}</strong>.
+            </p>
+            <p style="color: #856404; margin: 10px 0 0 0;">
+                Please wait for approval or <a href="mybookings.php" style="color: #0056b3; text-decoration: underline;">cancel your existing request</a> before making a new booking.
+            </p>
+        </div>
+    `;
+    
+    // Insert warning after page title
+    const pageTitle = document.querySelector('.page-title-section');
+    if (pageTitle) {
+        pageTitle.insertAdjacentHTML('afterend', warningHtml);
+    }
 }
 
 /**

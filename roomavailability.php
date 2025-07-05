@@ -80,6 +80,11 @@ body, html {
 .room-card {
     position: relative;
 }
+
+.room-card.requested {
+    outline: 1px #FF9500 solid;
+    outline-offset: -1px;
+}
 </style>
 
 <div class="page-vertical-wrapper">
@@ -211,6 +216,9 @@ body, html {
                     </div>
                     <div class="filter-tab" data-filter="occupied">
                         <div class="filter-tab-text">Occupied</div>
+                    </div>
+                    <div class="filter-tab" data-filter="requested">
+                        <div class="filter-tab-text">Requested</div>
                     </div>
                     <div class="filter-tab" data-filter="maintenance">
                         <div class="filter-tab-text">Maintenance</div>
@@ -389,7 +397,7 @@ body, html {
                                 try {
                                     $approvedBookings = $db->bookings->find([
                                         'room_id' => $room['_id'],
-                                        'day_of_week' => $selectedDayOfWeek,
+                                        'booking_date' => $selectedDate,
                                         'status' => 'approved'
                                     ]);
                                     
@@ -420,7 +428,7 @@ body, html {
                                     try {
                                         $pendingBookings = $db->bookings->find([
                                             'room_id' => $room['_id'],
-                                            'day_of_week' => $selectedDayOfWeek,
+                                            'booking_date' => $selectedDate,
                                             'status' => 'pending',
                                             'student_id' => $_SESSION['student_id']
                                         ]);
@@ -430,13 +438,10 @@ body, html {
                                             $endTime = isset($booking['end_time']) ? $booking['end_time'] : '';
                                             
                                             if (!empty($startTime) && !empty($endTime)) {
-                                                // Remove this buggy line:
-                                                // $selectedTimeFormatted = date('H:i', strtotime($selectedTimeSlot));
-                                                
-                                                // Keep these lines as they are correct:
                                                 $startTimeFormatted = date('H:i', strtotime($startTime));
                                                 $endTimeFormatted = date('H:i', strtotime($endTime));
                                                 
+                                                // Check if the selected time falls within the pending booking period
                                                 if ($selectedTimeFormatted >= $startTimeFormatted && $selectedTimeFormatted < $endTimeFormatted) {
                                                     $statusClass = 'requested';
                                                     $statusText = 'Requested';
@@ -482,7 +487,7 @@ body, html {
                                     // Check bookings
                                     $bookings = $db->bookings->find([
                                         'room_id' => $room['_id'],
-                                        'day_of_week' => $selectedDayOfWeek,
+                                        'booking_date' => $selectedDate,
                                         'status' => 'approved'
                                     ]);
                                     foreach ($bookings as $booking) {
@@ -636,7 +641,9 @@ body, html {
                     show = true;
             } else if (filter === 'occupied' && (card.classList.contains('booked') || card.classList.contains('occupied'))) {
                     show = true;
-            } else if (filter === 'maintenance' && card.classList.contains('maintenance')) {
+            } else if (filter === 'requested' && card.classList.contains('requested')) {
+                    show = true;
+                } else if (filter === 'maintenance' && card.classList.contains('maintenance')) {
                     show = true;
                 }
                 card.style.display = show ? 'block' : 'none';
