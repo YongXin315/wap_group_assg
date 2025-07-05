@@ -109,14 +109,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // Check if user already has any pending bookings
+    // Check if user has pending bookings that conflict with the selected date/time
     if (empty($bookingError)) {
         $pendingBooking = $db->bookings->findOne([
             'student_id' => $studentId,
             'status' => 'pending'
         ]);
+        
         if ($pendingBooking) {
-            $bookingError = 'You already have a pending booking request. Please wait for approval or cancel your existing request before making a new one.';
+            // Check if the pending booking conflicts with the selected date/time
+            $pendingDate = $pendingBooking['booking_date'];
+            $pendingStartTime = $pendingBooking['start_time'];
+            $pendingEndTime = $pendingBooking['end_time'];
+            
+            // Convert times to comparable format
+            $pendingStartFormatted = date('H:i', strtotime($pendingStartTime));
+            $pendingEndFormatted = date('H:i', strtotime($pendingEndTime));
+            $selectedStartFormatted = date('H:i', strtotime($startTime));
+            $selectedEndFormatted = date('H:i', strtotime($endTime));
+            
+            // Check for date and time overlap
+            if ($pendingDate === $bookingDate && 
+                (($selectedStartFormatted >= $pendingStartFormatted && $selectedStartFormatted < $pendingEndFormatted) ||
+                 ($selectedEndFormatted > $pendingStartFormatted && $selectedEndFormatted <= $pendingEndFormatted) ||
+                 ($selectedStartFormatted <= $pendingStartFormatted && $selectedEndFormatted >= $pendingEndFormatted))) {
+                $bookingError = 'You already have a pending booking request that conflicts with your selected time. Please wait for approval or cancel your existing request before making a new one.';
+            }
         }
     }
     
