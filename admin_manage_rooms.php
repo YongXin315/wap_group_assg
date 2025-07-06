@@ -84,6 +84,7 @@ sort($statuses);
                 </option>
             <?php endforeach; ?>
         </select>
+        <button type="button" onclick="resetFilters()">Reset</button>
     </form>
 
     <a href="admin_add_room.php"><button>Add Room</button></a>
@@ -127,6 +128,14 @@ sort($statuses);
                 document.getElementById('filterForm').submit();
             }, 1000); // wait 1000ms after typing stops
         });
+
+        // Reset filter values and submit the form
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.querySelector('select[name="type"]').value = 'all';
+            document.querySelector('select[name="status"]').value = 'all';
+            document.getElementById('filterForm').submit();
+        }
     </script>
 </body>
 </html>
