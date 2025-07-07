@@ -145,9 +145,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'booking_date' => $bookingDate,
             'status' => ['$in' => ['approved', 'pending']],
             // Find any discussion room
-            'room_id' => ['$in' => iterator_to_array($db->rooms->find([
+            'room_id' => ['$in' => array_map(fn($r) => $r['_id'], iterator_to_array($db->rooms->find([
                 'type' => ['$regex' => 'Discussion Room', '$options' => 'i']
-            ], ['projection' => ['_id' => 1]]))->map(fn($r) => $r['_id'])]
+            ], ['projection' => ['_id' => 1]])))],
         ]);
         if ($existingBooking) {
             $bookingError = 'You have already booked a discussion room on this date. Only one discussion room booking is allowed per day.';
