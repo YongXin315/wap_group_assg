@@ -124,18 +124,22 @@ $pendingBookings = $db->bookings->find($query, ['sort' => ['created_at' => -1]])
     </table>
 
     <script>
+        // Handles approval or cancellation of a booking
         function handleAction(bookingId, action, studentName) {
+            // Show confirmation dialog before proceeding
             const confirmation = confirm(`Are you sure you want to ${action} this request for ${studentName}?`);
             if (!confirmation) return;
 
+            // Send a POST request to the backend PHP handler with booking ID and action
             fetch('handlers/update_booking_status.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: bookingId, action: action })
+                body: JSON.stringify({ id: bookingId, action: action }) // Convert data to JSON
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    // Show success message and remove the booking row from the table
                     alert(`${action === 'approved' ? 'Approved' : 'Cancelled'} ${studentName}'s request.`);
                     document.getElementById(`row-${bookingId}`).remove();
                 } else {

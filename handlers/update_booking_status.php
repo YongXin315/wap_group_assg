@@ -28,6 +28,7 @@ try {
         ]]
     );
 
+    // Check if the booking was actually modified
     if ($result->getModifiedCount() > 0) {
         echo json_encode(['success' => true]);
     } else {

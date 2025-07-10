@@ -164,9 +164,11 @@ $statuses = array_filter($db->bookings->distinct("status"), fn($s) => $s !== 'pe
         form.submit();
     }
     function cancelBooking(bookingId, studentName) {
+        // Show a confirmation dialog before cancelling
         const confirmCancel = confirm(`Are you sure you want to cancel the approved booking for ${studentName}?`);
         if (!confirmCancel) return;
 
+        // Send a POST request to the backend handler to update the booking status
         fetch('handlers/update_booking_status.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -175,6 +177,7 @@ $statuses = array_filter($db->bookings->distinct("status"), fn($s) => $s !== 'pe
         .then(res => res.json())
         .then(data => {
             if (data.success) {
+                // If cancellation was successful, show confirmation and refresh page
                 alert(`Booking for ${studentName} has been cancelled.`);
                 location.reload(); // Refresh to reflect changes
             } else {
