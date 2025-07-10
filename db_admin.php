@@ -12,8 +12,9 @@ $collection = $db->admin;
 
 $admin = [
     [
-        '_id' => 'ADM00001',
+        '_id' => '00001',
         'admin_email' => 'taylorsadmin@taylors.edu.my',
+        'admin_name' => 'Chong',
         'password' => password_hash('admin123', PASSWORD_DEFAULT)
     ]
 ];
