@@ -262,7 +262,6 @@ $isUnderMaintenance = (isset($room['status']) && strtolower($room['status']) !==
 
 body {
     font-family: 'Inter', sans-serif;
-    background-color: #f8f9fa;
     color: #171212;
     line-height: 1.5;
 }
@@ -302,7 +301,7 @@ body {
     padding: 0 24px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    padding-top: 6rem;
 }
 
 /* Breadcrumb */
@@ -341,7 +340,7 @@ body {
 
 /* Room Title */
 .room-title-section {
-    padding: 24px 0 32px 0;
+    padding: 24px 0 10px 0;
 }
 
 .room-title .text {
@@ -444,7 +443,7 @@ body {
 .room-details {
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 0;
     padding: 32px;
     background: white;
     border: 1px solid #E5E8EB;
@@ -458,6 +457,7 @@ body {
     gap: 48px;
     padding: 24px 0;
     border-top: 1px solid #E5E8EB;
+    height: fit-content;
 }
 
 .detail-row:first-child {
@@ -470,6 +470,8 @@ body {
 }
 
 .detail-item {
+    padding: 0;
+    padding-top: 20px;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -694,7 +696,12 @@ body {
 
 .nav-icon {
     font-size: 18px;
+    background-color: white;
+}
+
+.nav-icon-p {
     color: #171212;
+    font-weight: bold;
 }
 
 .calendar-title .text {
@@ -896,28 +903,6 @@ body {
     background: #b02428;
 }
 
-/* Footer */
-.footer {
-    width: 100%;
-    background: white;
-    border-top: 1px solid #E5E8EB;
-    margin-top: auto;
-}
-
-.footer-content {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 40px 20px;
-}
-
-.footer-copyright .text {
-    text-align: center;
-    color: #915457;
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 24px;
-}
-
 /* Responsive Design */
 @media (max-width: 1200px) {
     .content-wrapper {
@@ -1089,13 +1074,13 @@ body {
                     <div class="calendar">
                 <div class="calendar-header">
                             <div class="calendar-nav" onclick="previousMonth()">
-                        <div class="nav-icon">‹</div>
+                        <div class="nav-icon"><p class="nav-icon-p">&lt;</p></div>
                     </div>
                             <div class="calendar-title">
                                 <div class="text" id="calendar-title"><?php echo $currentMonth; ?></div>
                             </div>
                             <div class="calendar-nav" onclick="nextMonth()">
-                        <div class="nav-icon">›</div>
+                        <div class="nav-icon"><p class="nav-icon-p">&gt;</p></div>
                     </div>
                 </div>
 
@@ -1158,7 +1143,7 @@ body {
                     <?php foreach ($timeSlots as $slot): ?>
                             <?php list($start, $end) = explode(' - ', $slot); ?>
                             <div class="extended-time-slot-header">
-                                <div class="text"><?php echo to12Hour($start) . ' - ' . to12Hour($end); ?></div>
+                                <div class="text"><?php echo to12Hour($start) . '<br>-<br>' . to12Hour($end); ?></div>
                             </div>
                     <?php endforeach; ?>
                 </div>
@@ -1183,7 +1168,7 @@ body {
                     <?php foreach ($eveningTimeSlots as $slot): ?>
                             <?php list($start, $end) = explode(' - ', $slot); ?>
                             <div class="extended-time-slot-header">
-                                <div class="text"><?php echo to12Hour($start) . ' - ' . to12Hour($end); ?></div>
+                                <div class="text"><?php echo to12Hour($start) . '<br>-<br>' . to12Hour($end); ?></div>
                             </div>
                     <?php endforeach; ?>
                 </div>
@@ -1212,15 +1197,7 @@ body {
         </div>
     </div>
 <?php endif; ?>
-</div>
-
-<!-- Footer -->
-<div class="footer">
-    <div class="footer-content">
-        <div class="footer-copyright">
-            <div class="text">© 2025 Taylor's University. All rights reserved.</div>
-        </div>
-    </div>
+<?php include_once 'component/footer.php'; ?>
 </div>
 
 <script>
@@ -1385,4 +1362,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php include_once 'component/footer.php'; ?>
+

@@ -11,7 +11,7 @@ include 'component/header.php';
 
 require_once 'db.php'; // or your DB connection
 $studentId = $_SESSION['student_id'];
-$bookings = $db->bookings->find(['student_id' => $studentId]);
+$bookings = $db->bookings->find(['student_id' => $studentId], ['sort' => ['created_at' => -1]]);
 ?>
 
 <style>
@@ -22,6 +22,7 @@ $bookings = $db->bookings->find(['student_id' => $studentId]);
     padding: 2rem;
     background: white;
     min-height: calc(100vh - 140px);
+    padding-top: 6rem;
 }
 
 .bookings-header {
@@ -41,7 +42,7 @@ $bookings = $db->bookings->find(['student_id' => $studentId]);
 .bookings-subtitle {
     font-size: 1.1rem;
     color: #666;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 }
 
 .filter-section {
@@ -144,6 +145,7 @@ $bookings = $db->bookings->find(['student_id' => $studentId]);
 .table-cell.room-name {
     color: #171212;
     font-weight: 400;
+    align-self: center;
 }
 
 .status-badge {
@@ -389,5 +391,4 @@ function cancelBooking(bookingId) {
         alert('An error occurred while cancelling the booking.');
     });
 }
-</script>
 </script>

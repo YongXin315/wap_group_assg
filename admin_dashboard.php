@@ -80,69 +80,204 @@ $statuses = array_filter($db->bookings->distinct("status"), fn($s) => $s !== 'pe
 
 <!DOCTYPE html>
 <html>
-<body>
-    <br><br><br><br>
-    <a href="admin_view_request.php">View Pending Requests</a>
-    <div>
-        <div><h3>Total Bookings Today</h3><p><?= $totalToday ?></p></div>
-        <div><h3>Approved Bookings</h3><p><?= $totalApproved ?></p></div>
-        <div><h3>Cancelled Bookings</h3><p><?= $totalCancelled ?></p></div>
-        <div><h3>Utilization Rate</h3><p><?= $utilizationRate ?>%</p></div>
-    </div>
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .main-container {
+            flex: 1 0 auto;
+            background: white;
+            overflow: hidden;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            display: flex;
+        }
+        .content-wrapper {
+            width: 100%;
+            justify-content: center;
+            align-items: flex-start;
+            display: flex;
+            padding-top: 8rem;
+        }
+        .content-container {
+            flex: 1 1 0;
+            max-width: 960px;
+            overflow: hidden;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            display: flex;
+        }
+        .pending-button {
+            float: right;
+            font-size: 14px;
+            padding: 2px 20px;
+            font-weight: 600;
+            border-radius: 20px;
+        }
+        .filter-form input, .filter-form select {
+            margin: 0 10px 10px 0;
+            min-width: 200px;
+        }
+        .div-table {
+            padding: 0 50px;
+            width: 100%;
+        }
+        .div-table-content {
+            border: 1px solid #E5E8EB;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .bookings-table th, td {
+            text-align: center;
+            padding: 15px 5px;
+            border-bottom: 1px solid #E5E8EB;
+            font-size: 14px;
+        }
+        .bookings-table td {
+            color: #915457;
+        }
+        .cancel-button {
+            background: none;
+            border: none;
+            color: #876363;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            text-decoration: underline;
+        }
 
-    <form method="GET" id="filterForm">
-        <input type="date" name="date" value="<?= htmlspecialchars($dateFilter) ?>" onchange="submitForm()">
-        <input type="text" name="room" placeholder="Search Room Name" value="<?= htmlspecialchars($roomSearch) ?>" oninput="delayedSubmit()">
-        <select name="status" onchange="submitForm()">
-            <option value="all">All Status</option>
-            <?php foreach ($statuses as $status): ?>
-                <option value="<?= $status ?>" <?= $statusFilter === $status ? 'selected' : '' ?>><?= $status ?></option>
-            <?php endforeach; ?>
-        </select>
-        <input type="text" name="search" placeholder="Search by Student Name or ID" value="<?= htmlspecialchars($search) ?>" oninput="delayedSubmit()">
-        <select name="sort_by" onchange="submitForm()">
-            <option value="created_at" <?= ($_GET['sort_by'] ?? '') === 'created_at' ? 'selected' : '' ?>>Created Time</option>
-            <option value="booking_date" <?= ($_GET['sort_by'] ?? '') === 'booking_date' ? 'selected' : '' ?>>Booking Date</option>
-        </select>
-        <button type="button" onclick="resetFilters()">Reset</button>
-    </form>
+        .cancel-button:hover {
+            color: #C3272B;
+        }
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            min-width: 80px;
+        }
 
-    <table>
-        <thead>
-            <tr>
-                <th>Booking Date</th>
-                <th>Room ID</th>
-                <th>Room Name</th>
-                <th>Time Slot</th>
-                <th>Student ID</th>
-                <th>Student Name</th>
-                <th>Purpose</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($bookings as $booking): ?>
-                <tr>
-                    <td><?= htmlspecialchars($booking['booking_date'] ?? '-') ?></td>
-                    <td><?= htmlspecialchars($booking['room_id'] ?? '-') ?></td>
-                    <td><?= htmlspecialchars($roomMap[$booking['room_id']] ?? '-') ?></td>
-                    <td><?= htmlspecialchars(($booking['start_time'] ?? '-') . ' - ' . ($booking['end_time'] ?? '-')) ?></td>
-                    <td><?= htmlspecialchars($booking['student_id'] ?? '-') ?></td>
-                    <td><?= htmlspecialchars($booking['full_name'] ?? '-') ?></td>
-                    <td><?= htmlspecialchars($booking['purpose'] ?? '-') ?></td>
-                    <td><?= htmlspecialchars($booking['status'] ?? '-') ?></td>
-                    <td>
-                        <?php if ($booking['status'] === 'approved'): ?>
-                            <button onclick="cancelBooking('<?= $booking['_id'] ?>', '<?= addslashes($booking['full_name']) ?>')">Cancel</button>
-                        <?php else: ?>
-                            -
+        .badge-approved {
+            background-color: #86BB8D;
+        }
+
+        .badge-cancelled {
+            background-color: #c62828;
+        }
+    </style>
+</head>
+<body class="font-inter">
+    <div class="main-container">
+        <div class="content-wrapper">
+            <div class="content-container">
+                <div class="text-3xl font-bold mb-6" style="align-self: stretch; padding: 0 16px;">Booking Management Dashboard
+                    <span class="pending-button bg-red-600 text-white px-4 py-2 rounded"><a href="admin_view_request.php">View Pending Requests</a></span>
+                </div>
+
+                <div class="stats-section">
+                    <div class="stat-card total">
+                        <div class="stat-label">Total Bookings Today</div>
+                        <div class="stat-value"><?php echo $totalToday; ?></div>
+                    </div>
+                    <div class="stat-card available">
+                        <div class="stat-label">Approved Bookings</div>
+                        <div class="stat-value"><?php echo $totalApproved; ?></div>
+                    </div>
+                    <div class="stat-card occupied">
+                        <div class="stat-label">Cancelled Bookings</div>
+                        <div class="stat-value"><?php echo $totalCancelled; ?></div>
+                    </div>
+                    <div class="stat-card total">
+                        <div class="stat-label">Utilization Rate</div>
+                        <div class="stat-value"><?php echo $utilizationRate; ?>%</div>
+                    </div>
+                </div>
+
+                <div class="section-title">
+                    <div class="section-title-text">Filters</div>
+                </div>
+
+                <form method="GET" id="filterForm" class="gap-4 mb-6 filter-form" style="padding: 0 16px;">
+                    <input type="date" name="date" class="border p-2 rounded" value="<?= htmlspecialchars($dateFilter) ?>" onchange="submitForm()">
+                    <select name="status" class="border p-2 rounded" onchange="submitForm()">
+                        <option value="all">All Status</option>
+                        <?php foreach ($statuses as $status): ?>
+                            <option value="<?= $status ?>" <?= $statusFilter === $status ? 'selected' : '' ?>><?= $status ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <select name="sort_by" class="border p-2 rounded" onchange="submitForm()">
+                        <option value="created_at" <?= ($_GET['sort_by'] ?? '') === 'created_at' ? 'selected' : '' ?>>Created Time</option>
+                        <option value="booking_date" <?= ($_GET['sort_by'] ?? '') === 'booking_date' ? 'selected' : '' ?>>Booking Date</option>
+                    </select>
+                    <br>
+                    <input type="text" name="search" class="border p-2 rounded" style="width: 300px;" placeholder="Search by Student Name or ID" value="<?= htmlspecialchars($search) ?>" oninput="delayedSubmit()">
+                    <input type="text" name="room" class="border p-2 rounded" style="width: 229px;" placeholder="Search Room Name" value="<?= htmlspecialchars($roomSearch) ?>" oninput="delayedSubmit()">
+                    <button type="button" class="bg-red-600 text-white px-4 py-2 rounded" onclick="resetFilters()">Reset</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="div-table">
+            <div class="div-table-content">
+                <table class="bookings-table min-w-full">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-2">Booking Date</th>
+                            <th class="px-4 py-2">Room ID</th>
+                            <th class="px-4 py-2">Room Name</th>
+                            <th class="px-4 py-2">Time Slot</th>
+                            <th class="px-4 py-2">Student ID</th>
+                            <th class="px-4 py-2">Student Name</th>
+                            <th class="px-4 py-2">Purpose</th>
+                            <th class="px-4 py-2">Status</th>
+                            <th class="px-4 py-2">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                            $hasRecord = false;
+                            foreach ($bookings as $booking):
+                                $hasRecord = true;
+                        ?>
+                            <tr>
+                                <td><?= htmlspecialchars($booking['booking_date'] ?? '-') ?></td>
+                                <td><?= htmlspecialchars($booking['room_id'] ?? '-') ?></td>
+                                <td><?= htmlspecialchars($roomMap[$booking['room_id']] ?? '-') ?></td>
+                                <td><?= htmlspecialchars(($booking['start_time'] ?? '-') . ' - ' . ($booking['end_time'] ?? '-')) ?></td>
+                                <td><?= htmlspecialchars($booking['student_id'] ?? '-') ?></td>
+                                <td><?= htmlspecialchars($booking['full_name'] ?? '-') ?></td>
+                                <td><?= htmlspecialchars($booking['purpose'] ?? '-') ?></td>
+                                <td>
+                                    <?php
+                                        $status = $booking['status'] ?? 'unknown';
+                                        $class = 'badge ';
+                                        if ($status === 'approved') $class .= 'badge-approved';
+                                        elseif ($status === 'cancelled') $class .= 'badge-cancelled';
+                                    ?>
+                                    <span class="<?= $class ?>"><?= ucfirst($status) ?></span>
+                                </td>
+                                <td>
+                                    <?php if ($booking['status'] === 'approved'): ?>
+                                        <button class="cancel-button" onclick="cancelBooking('<?= $booking['_id'] ?>', '<?= addslashes($booking['full_name']) ?>')">Cancel</button>
+                                    <?php else: ?>
+                                        -
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <?php if (!$hasRecord): ?>
+                            <tr><td colspan="9" style="text-align:center; padding:1em;">No records found.</td></tr>
                         <?php endif; ?>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
     <script>
     function submitForm() {

@@ -38,9 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch existing room types and statuses for dropdowns
+// Fetch existing room types for dropdowns
 $types = $db->rooms->distinct("type");
-$statuses = array_unique(array_merge(['Available', 'Under Maintenance'], $db->rooms->distinct("status")));
 ?>
 
 <?php include_once 'component/header.php'; ?>
@@ -56,84 +55,152 @@ $statuses = array_unique(array_merge(['Available', 'Under Maintenance'], $db->ro
             newInput.style.display = select.value === 'other' ? 'block' : 'none';
         }
     </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .main-container {
+            flex: 1 0 auto;
+            background: white;
+            overflow: hidden;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            display: flex;
+            background: #F5F5F5;
+        }
+        .content-wrapper {
+            width: 100%;
+            justify-content: center;
+            align-items: flex-start;
+            display: flex;
+            padding-top: 8rem;
+
+        }
+        .content-container {
+            background: white;
+            flex: 1 1 0;
+            max-width: 700px;
+            overflow: hidden;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .filter-form {
+            padding: 10px 16px;
+            width: 100%;
+        }
+        .filter-form input, select {
+            margin-right: 10px;
+            min-width: 100%;
+            border-color: #E5D1D1;
+            color: #945454;
+            background: #FAF7FA;
+        }
+        .filter-form label {
+            display: block;
+            margin: 15px 0 5px 0;
+            font-weight: 500;
+        }
+        .action-btn {
+            float: right;
+            margin-top: 20px;
+        }
+        .cancel-btn {
+            font-weight: 500;
+            background: #F2E8E8;
+            border-radius: 10px;
+            padding: 10px 16px;
+            margin-right: 12px;
+        }
+        .add-btn {
+            color: white;
+            font-weight: 500;
+            background: #C72426;
+            border-radius: 10px;
+            padding: 10px 16px;
+        }
+    </style>
 </head>
-<body>
-    <!-- Show error if room code already exists -->
-    <?php if (isset($error)): ?>
-        <div class="error"><?= $error ?></div>
-    <?php endif; ?>
+<body class="font-inter">
+    <div class="main-container">
+        <div class="content-wrapper">
+            <div class="content-container booking-container">
+                <div class="text-3xl font-bold" style="padding-left: 16px;">Add New Room</div>
 
-    <form style="margin-top: 8em;" method="POST" action="">
-        <!-- Room name -->
-        <label for="room_name">Room Name</label>
-        <input type="text" name="room_name" id="room_name" required value="<?= htmlspecialchars($_POST['room_name'] ?? '') ?>">
+                <!-- Show error if room code already exists -->
+                <?php if (isset($error)): ?>
+                    <div class="error"><?= $error ?></div>
+                <?php endif; ?>
 
-        <!-- Room code or ID -->
-        <label for="room_code">Room Code or ID</label>
-        <input type="text" name="room_code" id="room_code" required value="<?= htmlspecialchars($_POST['room_code'] ?? '') ?>">
+                <form method="POST" action="" class="gap-4 filter-form">
+                    <!-- Room name -->
+                    <label for="room_name">Room Name</label>
+                    <input type="text" name="room_name" id="room_name" class="border p-2 rounded" placeholder="Enter Room Name" required value="<?= htmlspecialchars($_POST['room_name'] ?? '') ?>">
+                    <br>
+                    <!-- Room code or ID -->
+                    <label for="room_code">Room Code or ID</label>
+                    <input type="text" name="room_code" id="room_code" class="border p-2 rounded" placeholder="Enter Room Code or ID" required value="<?= htmlspecialchars($_POST['room_code'] ?? '') ?>">
+                    <br>
+                    <!-- Room type dropdown -->
+                    <label for="room_type">Room Type</label>
+                    <select name="room_type" id="room_type" class="border p-2 rounded" onchange="toggleNewInput('room_type', 'new_type_input')" required>
+                        <option value="">Select Type</option>
+                        <?php foreach ($types as $type): ?>
+                            <option value="<?= htmlspecialchars($type) ?>"
+                                <?= ($_POST['room_type'] ?? '') === $type ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($type) ?>
+                            </option>
+                        <?php endforeach; ?>
+                        <option value="other" <?= ($_POST['room_type'] ?? '') === 'other' ? 'selected' : '' ?>>Other</option>
+                    </select>
+                    <!-- Custom type input if "Other" is selected -->
+                    <input type="text" name="new_type" id="new_type_input" class="border p-2 rounded mt-4" placeholder="Enter Room Type"
+                    value="<?= htmlspecialchars($_POST['new_type'] ?? '') ?>"
+                    style="<?= ($_POST['room_type'] ?? '') === 'other' ? 'display: block;' : 'display: none;' ?>">
 
-        <!-- Room type dropdown -->
-        <label for="room_type">Room Type</label>
-        <select name="room_type" id="room_type" onchange="toggleNewInput('room_type', 'new_type_input')" required>
-            <option value="">Select Type</option>
-            <?php foreach ($types as $type): ?>
-                <option value="<?= htmlspecialchars($type) ?>"
-                    <?= ($_POST['room_type'] ?? '') === $type ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($type) ?>
-                </option>
-            <?php endforeach; ?>
-            <option value="other" <?= ($_POST['room_type'] ?? '') === 'other' ? 'selected' : '' ?>>Other</option>
-        </select>
-        <!-- Custom type input if "Other" is selected -->
-        <input type="text" name="new_type" id="new_type_input" 
-        value="<?= htmlspecialchars($_POST['new_type'] ?? '') ?>"
-        style="<?= ($_POST['room_type'] ?? '') === 'other' ? 'display: block;' : 'display: none;' ?>">
+                    <!-- Block selection (A–E only) -->
+                    <label for="block">Block</label>
+                    <select name="block" id="block" class="border p-2 rounded" required>
+                        <option value="">Select Block</option>
+                        <?php foreach (['A', 'B', 'C', 'D', 'E'] as $block): ?>
+                            <option value="<?= $block ?>" <?= ($_POST['block'] ?? '') === $block ? 'selected' : '' ?>><?= $block ?></option>
+                        <?php endforeach; ?>
+                    </select>
 
-        <!-- Block selection (A–E only) -->
-        <label for="block">Block</label>
-        <select name="block" id="block" required>
-            <option value="">Select Block</option>
-            <?php foreach (['A', 'B', 'C', 'D', 'E'] as $block): ?>
-                <option value="<?= $block ?>" <?= ($_POST['block'] ?? '') === $block ? 'selected' : '' ?>><?= $block ?></option>
-            <?php endforeach; ?>
-        </select>
+                    <!-- Floor -->
+                    <label for="floor">Floor</label>
+                    <input type="text" name="floor" id="floor" class="border p-2 rounded" placeholder="Enter Floor" required value="<?= htmlspecialchars($_POST['floor'] ?? '') ?>">
 
-        <!-- Floor -->
-        <label for="floor">Floor</label>
-        <input type="text" name="floor" id="floor" required value="<?= htmlspecialchars($_POST['floor'] ?? '') ?>">
+                    <!-- Amenities -->
+                    <label for="amenities">Amenities</label>
+                    <input type="text" name="amenities" id="amenities" class="border p-2 rounded" placeholder="Enter Amenities" required value="<?= htmlspecialchars($_POST['amenities'] ?? '') ?>">
 
-        <!-- Amenities -->
-        <label for="amenities">Amenities</label>
-        <input type="text" name="amenities" id="amenities" value="<?= htmlspecialchars($_POST['amenities'] ?? '') ?>">
+                    <!-- Minimum capacity -->
+                    <label for="min_capacity">Minimum Capacity</label>
+                    <input type="number" name="min_capacity" id="min_capacity" class="border p-2 rounded" placeholder="Enter Minimum Capacity" required value="<?= htmlspecialchars($_POST['min_capacity'] ?? '') ?>">
 
-        <!-- Minimum capacity -->
-        <label for="min_capacity">Minimum Capacity</label>
-        <input type="number" name="min_capacity" id="min_capacity" required value="<?= htmlspecialchars($_POST['min_capacity'] ?? '') ?>">
+                    <!-- Maximum capacity -->
+                    <label for="max_capacity">Maximum Capacity</label>
+                    <input type="number" name="max_capacity" id="max_capacity" class="border p-2 rounded" placeholder="Enter Maximum Capacity" required value="<?= htmlspecialchars($_POST['max_capacity'] ?? '') ?>">
 
-        <!-- Maximum capacity -->
-        <label for="max_capacity">Maximum Capacity</label>
-        <input type="number" name="max_capacity" id="max_capacity" required value="<?= htmlspecialchars($_POST['max_capacity'] ?? '') ?>">
+                    <!-- Room status dropdown -->
+                    <label for="status">Status</label>
+                    <select name="status"id="status" class="border p-2 rounded" onchange="toggleNewInput('status', 'new_status_input')" required>
+                        <option value="" hidden>Select Status</option>
+                        <option value="Available" <?= ($_POST['status'] ?? '') === 'Available' ? 'selected' : '' ?>>Available</option>
+                        <option value="Under Maintenance" <?= ($_POST['status'] ?? '') === 'Under Maintenance' ? 'selected' : '' ?>>Under Maintenance</option>
+                    </select>
+                    <div class="action-btn">
+                        <a href="admin_manage_rooms.php"><button type="button" class="cancel-btn">Cancel</button></a>
+                        <button type="submit" class="add-btn">Add Room</button>
+                    </div>
+                    
+                </form>
 
-        <!-- Room status dropdown -->
-        <label for="status">Status</label>
-        <select name="status" id="status" onchange="toggleNewInput('status', 'new_status_input')" required>
-            <option value="">Select Status</option>
-            <?php foreach ($statuses as $status): ?>
-                <option value="<?= htmlspecialchars($status) ?>" 
-                    <?= ($_POST['status'] ?? '') === $status ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($status) ?>
-                </option>
-            <?php endforeach; ?>
-            <option value="other" <?= ($_POST['status'] ?? '') === 'other' ? 'selected' : '' ?>>Other</option>
-        </select>
-        <!-- Custom status input if "Other" is selected -->
-        <input type="text" name="new_status" id="new_status_input" 
-        value="<?= htmlspecialchars($_POST['new_status'] ?? '') ?>"
-        style="<?= ($_POST['status'] ?? '') === 'other' ? 'display: block;' : 'display: none;' ?>">
-
-        <a href="admin_manage_rooms.php"><button type="button">Cancel</button></a>
-        <button type="submit">Add Room</button>
-    </form>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
 

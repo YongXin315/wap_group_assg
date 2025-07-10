@@ -339,12 +339,13 @@ body, html {
 
 .main-container {
     flex: 1 0 auto;
-    background: white;
+    background: #F5F5F5;
     overflow: hidden;
     flex-direction: column;
     justify-content: flex-start;
     align-items: flex-start;
     display: flex;
+    padding-top: 6rem;
 }
 
 .content-wrapper {
@@ -427,6 +428,13 @@ body, html {
 .submit-button:disabled:hover {
     background-color: #cccccc !important;
     transform: none !important;
+}
+
+.submit-button {
+    color: white;
+    font-weight: bold;
+    font-family: Inter;
+    font-size: 15px;
 }
 </style>
 

@@ -65,6 +65,7 @@ body, html {
     justify-content: flex-start;
     align-items: flex-start;
     display: flex;
+    padding-top: 6rem;
 }
 .room-name.clickable {
     cursor: pointer;
