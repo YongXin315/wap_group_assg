@@ -13,28 +13,46 @@ $adminName = $_SESSION['admin_name'] ?? $_SESSION['admin_id'] ?? 'Admin';
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Prepare room data from form input
-    $roomData = [
-        '_id' => $_POST['room_code'],
-        'room_name' => $_POST['room_name'],
-        'type' => $_POST['room_type'] === 'other' ? $_POST['new_type'] : $_POST['room_type'],
-        'block' => $_POST['block'],
-        'floor' => $_POST['floor'],
-        'amenities' => $_POST['amenities'],
-        'min_occupancy' => (int)$_POST['min_capacity'],
-        'max_occupancy' => (int)$_POST['max_capacity'],
-        'status' => $_POST['status'] === 'other' ? $_POST['new_status'] : $_POST['status']
-    ];
+    // Sanitize inputs
+    $room_code = trim(strip_tags($_POST['room_code']));
+    $room_name = trim(strip_tags($_POST['room_name']));
+    $room_type = $_POST['room_type'] === 'other' ? trim(strip_tags($_POST['new_type'])) : trim(strip_tags($_POST['room_type']));
+    $block = trim(strip_tags($_POST['block']));
+    $floor = trim(strip_tags($_POST['floor']));
+    $amenities = trim(strip_tags($_POST['amenities']));
+    $min_capacity = (int)$_POST['min_capacity'];
+    $max_capacity = (int)$_POST['max_capacity'];
+    $status = $_POST['status'] === 'other' ? trim(strip_tags($_POST['new_status'])) : trim(strip_tags($_POST['status']));
 
-    // Check for duplicate _id
-    $existing = $db->rooms->findOne(['_id' => $roomData['_id']]);
-    if ($existing) {
-        // Show error without clearing the form
-        $error = "Room code already exists, please change a new code";
+    // Validate essential fields (in case browser validation is bypassed)
+    if (!$room_code || !$room_name || !$room_type || !$block || !$floor || !$amenities || !$status || $min_capacity < 1 || $max_capacity < $min_capacity) {
+        $error = "Please ensure all fields are filled correctly.";
     } else {
-        $db->rooms->insertOne($roomData);
-        header("Location: admin_manage_rooms.php?added=1");
-        exit;
+        // Check for existing room code
+        $existing = $db->rooms->findOne(['_id' => $room_code]);
+        if ($existing) {
+            $error = "Room code already exists. Please use a different code.";
+        } else {
+            // Prepare sanitized data to insert
+            $roomData = [
+                '_id' => $room_code,
+                'room_name' => $room_name,
+                'type' => $room_type,
+                'block' => $block,
+                'floor' => $floor,
+                'amenities' => $amenities,
+                'min_occupancy' => $min_capacity,
+                'max_occupancy' => $max_capacity,
+                'status' => $status
+            ];
+
+            // Insert into MongoDB
+            $db->rooms->insertOne($roomData);
+
+            // Redirect to manage page with success flag
+            header("Location: admin_manage_rooms.php?added=1");
+            exit;
+        }
     }
 }
 

@@ -12,7 +12,14 @@ if (!isset($_GET['id'])) {
     exit;
 }
 
-$original_id = $_GET['id'];
+// Sanitize and validate room ID from URL
+$original_id = isset($_GET['id']) ? trim($_GET['id']) : '';
+if (!$original_id) {
+    header("Location: admin_manage_rooms.php");
+    exit;
+}
+
+// Fetch room document by original ID
 $room = $db->rooms->findOne(['_id' => $original_id]);
 if (!$room) {
     // If not found stop execution
@@ -20,51 +27,64 @@ if (!$room) {
 }
 
 $previousStatus = $room['status'];
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_single']) && $_POST['cancel_single'] === 'yes') {
-    $bookingId = $_POST['booking_id'] ?? '';
-    if ($bookingId) {
-        $db->bookings->updateOne(
-            ['_id' => new MongoDB\BSON\ObjectId($bookingId)],
-            ['$set' => ['status' => 'cancelled']]
-        );
-    }
-    $_POST['booking_cancelled'] = '1';
-}
-
-// Handle form submission
+$error = '';
 $affectedBookings = [];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['cancel_warning_box']) && $_POST['cancel_warning_box'] === 'yes') {
-        $affectedBookings = []; // hide warning
-        // Just skip further processing so form re-renders with $_POST data
-    } else {
-        $new_id = $_POST['room_code'];
-        $newStatus = $_POST['status'] === 'other' ? $_POST['new_status'] : $_POST['status'];
+    // Handle single booking cancellation (when cancel button is clicked in warning box)
+    if (isset($_POST['cancel_single']) && $_POST['cancel_single'] === 'yes') {
+        $bookingId = $_POST['booking_id'] ?? '';
+        if ($bookingId) {
+            $db->bookings->updateOne(
+                ['_id' => new ObjectId($bookingId)],
+                ['$set' => ['status' => 'cancelled']]
+            );
+        }
+        $_POST['booking_cancelled'] = '1';
+    }
 
-    
+    // Proceed only if not cancelling warning box
+    if (!isset($_POST['cancel_warning_box']) || $_POST['cancel_warning_box'] !== 'yes') {
+        // Sanitize inputs
+        $new_id = trim(strip_tags($_POST['room_code']));
+        $room_name = trim(strip_tags($_POST['room_name']));
+        $room_type = $_POST['room_type'] === 'other' ? trim(strip_tags($_POST['new_type'])) : trim(strip_tags($_POST['room_type']));
+        $block = trim(strip_tags($_POST['block']));
+        $floor = trim(strip_tags($_POST['floor']));
+        $amenities = trim(strip_tags($_POST['amenities']));
+        $min_capacity = (int)$_POST['min_capacity'];
+        $max_capacity = (int)$_POST['max_capacity'];
+        $status = $_POST['status'] === 'other' ? trim(strip_tags($_POST['new_status'])) : trim(strip_tags($_POST['status']));
 
-        if ($new_id !== $original_id) {
+        // Validate logic
+        if (!$new_id || !$room_name || !$room_type || !$block || !$floor || !$status || $min_capacity < 1 || $max_capacity < $min_capacity) {
+            $error = "Please fill in all fields correctly.";
+        }
+
+        // Check for duplicate ID if ID changed
+        if (!$error && $new_id !== $original_id) {
             $exists = $db->rooms->findOne(['_id' => $new_id]);
             if ($exists) {
-                $error = "Room code already exists, please change a new code";
+                $error = "Room code already exists. Please use a different code.";
             }
         }
 
-        if (!isset($error)) {
+        // Prepare updated data
+        if (!$error) {
             $updated = [
                 '_id' => $new_id,
-                'room_name' => $_POST['room_name'],
-                'type' => $_POST['room_type'] === 'other' ? $_POST['new_type'] : $_POST['room_type'],
-                'block' => $_POST['block'],
-                'floor' => $_POST['floor'],
-                'amenities' => $_POST['amenities'],
-                'min_occupancy' => (int)$_POST['min_capacity'],
-                'max_occupancy' => (int)$_POST['max_capacity'],
-                'status' => $newStatus
+                'room_name' => $room_name,
+                'type' => $room_type,
+                'block' => $block,
+                'floor' => $floor,
+                'amenities' => $amenities,
+                'min_occupancy' => $min_capacity,
+                'max_occupancy' => $max_capacity,
+                'status' => $status
             ];
 
-            if ($newStatus === 'Under Maintenance') {
+            // Check for affected bookings if status is changing to 'Under Maintenance'
+            if ($status === 'Under Maintenance') {
                 $affectedBookings = iterator_to_array($db->bookings->find([
                     'room_id' => $new_id,
                     'status' => ['$in' => ['approved', 'pending']],
@@ -72,7 +92,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]));
             }
 
-            if (isset($_POST['proceed_without_cancel']) && $_POST['proceed_without_cancel'] === 'yes') {
+            // If OK to proceed or no bookings affected
+            if (isset($_POST['proceed_without_cancel']) || empty($affectedBookings)) {
                 if ($new_id !== $original_id) {
                     $db->rooms->deleteOne(['_id' => $original_id]);
                 }
@@ -80,31 +101,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header("Location: admin_manage_rooms.php?updated=1");
                 exit;
             }
-
-            if (empty($affectedBookings)) {
-                if ($new_id !== $original_id) {
-                    $db->rooms->deleteOne(['_id' => $original_id]);
-                }
-                $db->rooms->replaceOne(['_id' => $new_id], $updated);
-                header("Location: admin_manage_rooms.php?updated=1");
-                exit;
-            }
-
-            if (!isset($_POST['booking_cancelled'])) {
-                if ($newStatus === 'Under Maintenance') {
-                    $affectedBookings = iterator_to_array($db->bookings->find([
-                        'room_id' => $new_id,
-                        'status' => ['$in' => ['approved', 'pending']],
-                        'booking_date' => ['$gte' => date('Y-m-d')]
-                    ]));
-                }
-            }
-
         }
     }
 }
 
-// Fetch types and statuses
+// Fetch dropdown options
 $types = $db->rooms->distinct("type");
 sort($types);
 ?>
@@ -116,23 +117,16 @@ sort($types);
 <head>
     <title>Edit Room</title>
     <script>
-        function toggleNewInput(selectId, newInputId) {
+        function toggleNewInput(selectId, inputId) {
             const select = document.getElementById(selectId);
-            const input = document.getElementById(newInputId);
+            const input = document.getElementById(inputId);
             input.style.display = select.value === 'other' ? 'block' : 'none';
         }
-        window.onload = function () {
+
+        // Auto-toggle on page load (in case of form repopulation)
+        window.onload = () => {
             toggleNewInput('room_type', 'new_type_input');
-            toggleNewInput('status', 'new_status_input');
         };
-    </script>
-    <script>
-        // Toggle visibility of custom input fields when "Other" is selected
-        function toggleNewInput(selectId, newInputId) {
-            const select = document.getElementById(selectId);
-            const newInput = document.getElementById(newInputId);
-            newInput.style.display = select.value === 'other' ? 'block' : 'none';
-        }
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>

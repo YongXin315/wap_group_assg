@@ -7,7 +7,7 @@ header('Content-Type: application/json');
 // Parse incoming JSON
 $input = json_decode(file_get_contents('php://input'), true);
 $bookingId = $input['id'] ?? null;
-$action = $input['action'] ?? null;
+$action = strtolower(trim($input['action'] ?? ''));
 
 // Validate
 if (!$bookingId || !in_array($action, ['approved', 'cancelled'])) {
@@ -17,13 +17,11 @@ if (!$bookingId || !in_array($action, ['approved', 'cancelled'])) {
 }
 
 try {
-    $status = strtolower($action);
-
     // Convert string ID to MongoDB ObjectId
     $result = $db->bookings->updateOne(
         ['_id' => new MongoDB\BSON\ObjectId($bookingId)],
         ['$set' => [
-            'status' => $status,
+            'status' => $action,
             'updated_at' => new MongoDB\BSON\UTCDateTime()
         ]]
     );

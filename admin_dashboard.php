@@ -12,19 +12,27 @@ $adminName = $_SESSION['admin_name'] ?? $_SESSION['admin_id'] ?? 'Admin';
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 
+// Sanitize and validate GET inputs
+function sanitize_input($input) {
+    return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
+}
+
 // Set timezone to Malaysia
 date_default_timezone_set('Asia/Kuala_Lumpur');
 $today = new DateTime();
 $startOfDay = new UTCDateTime((new DateTime('today'))->getTimestamp() * 1000);
 $endOfDay = new UTCDateTime((new DateTime('tomorrow'))->getTimestamp() * 1000);
 
-// Filters
-$search = trim($_GET['search'] ?? '');
-$roomSearch = trim($_GET['room'] ?? '');
-$statusFilter = $_GET['status'] ?? '';
-$dateFilter = $_GET['date'] ?? '';
-$sortBy = $_GET['sort_by'] ?? 'created_at';
-$sortField = $sortBy === 'booking_date' ? 'booking_date' : 'created_at';
+// Sanitize filter inputs
+$search = sanitize_input($_GET['search'] ?? '');
+$roomSearch = sanitize_input($_GET['room'] ?? '');
+$statusFilter = sanitize_input($_GET['status'] ?? '');
+$dateFilter = sanitize_input($_GET['date'] ?? '');
+$sortBy = sanitize_input($_GET['sort_by'] ?? 'created_at');
+
+// Validate allowed sort field to prevent injection
+$allowedSortFields = ['created_at', 'booking_date'];
+$sortField = in_array($sortBy, $allowedSortFields) ? $sortBy : 'created_at';
 
 // Build query
 $conditions = [];
@@ -115,7 +123,11 @@ $statuses = array_filter($db->bookings->distinct("status"), fn($s) => $s !== 'pe
             font-weight: 600;
             border-radius: 20px;
         }
-        .filter-form input, .filter-form select {
+        .filter-form input {
+            margin: 0 10px 10px 0;
+            min-width: 307px;
+        }
+        .filter-form select {
             margin: 0 10px 10px 0;
             min-width: 200px;
         }
@@ -203,7 +215,7 @@ $statuses = array_filter($db->bookings->distinct("status"), fn($s) => $s !== 'pe
                 </div>
 
                 <form method="GET" id="filterForm" class="gap-4 mb-6 filter-form" style="padding: 0 16px;">
-                    <input type="date" name="date" class="border p-2 rounded" value="<?= htmlspecialchars($dateFilter) ?>" onchange="submitForm()">
+                    <input type="date" name="date" class="border p-2 rounded" style="min-width: 200px;" value="<?= htmlspecialchars($dateFilter) ?>" onchange="submitForm()">
                     <select name="status" class="border p-2 rounded" onchange="submitForm()">
                         <option value="all">All Status</option>
                         <?php foreach ($statuses as $status): ?>
@@ -215,8 +227,8 @@ $statuses = array_filter($db->bookings->distinct("status"), fn($s) => $s !== 'pe
                         <option value="booking_date" <?= ($_GET['sort_by'] ?? '') === 'booking_date' ? 'selected' : '' ?>>Booking Date</option>
                     </select>
                     <br>
-                    <input type="text" name="search" class="border p-2 rounded" style="width: 300px;" placeholder="Search by Student Name or ID" value="<?= htmlspecialchars($search) ?>" oninput="delayedSubmit()">
-                    <input type="text" name="room" class="border p-2 rounded" style="width: 229px;" placeholder="Search Room Name" value="<?= htmlspecialchars($roomSearch) ?>" oninput="delayedSubmit()">
+                    <input type="text" name="search" class="border p-2 rounded" placeholder="Search by Student Name or ID" value="<?= htmlspecialchars($search) ?>" oninput="delayedSubmit()">
+                    <input type="text" name="room" class="border p-2 rounded" placeholder="Search Room Name" value="<?= htmlspecialchars($roomSearch) ?>" oninput="delayedSubmit()">
                     <button type="button" class="bg-red-600 text-white px-4 py-2 rounded" onclick="resetFilters()">Reset</button>
                 </form>
             </div>

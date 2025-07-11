@@ -10,9 +10,9 @@ require_once 'db.php';
 $adminName = $_SESSION['admin_name'] ?? $_SESSION['admin_id'] ?? 'Admin';
 
 // Fetch filters from GET
-$search = isset($_GET['search']) ? trim($_GET['search']) : '';      // search for room name
-$filterType = isset($_GET['type']) ? $_GET['type'] : '';            // room type filter
-$filterStatus = isset($_GET['status']) ? $_GET['status'] : '';      // room status filter
+$search = isset($_GET['search']) ? trim(strip_tags($_GET['search'])) : '';
+$filterType = isset($_GET['type']) ? trim(strip_tags($_GET['type'])) : '';
+$filterStatus = isset($_GET['status']) ? trim(strip_tags($_GET['status'])) : '';
 
 // Build MongoDB query
 $conditions = [];

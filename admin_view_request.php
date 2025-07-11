@@ -11,8 +11,14 @@ use MongoDB\BSON\ObjectId;
 // Get admin name or ID from session
 $adminName = $_SESSION['admin_name'] ?? $_SESSION['admin_id'] ?? 'Admin';
 
-$search = $_GET['search'] ?? '';
-$roomTypeFilter = $_GET['room_type'] ?? '';
+// Sanitize input safely
+function sanitize_input($input) {
+    return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
+}
+
+// Sanitize filters from GET request
+$search = sanitize_input($_GET['search'] ?? '');
+$roomTypeFilter = sanitize_input($_GET['room_type'] ?? '');
 
 // Get room_ids for pending bookings
 $pendingRoomIds = $db->bookings->distinct('room_id', ['status' => 'pending']);
@@ -23,6 +29,7 @@ $roomMap = [];
 $roomTypeMap = [];
 $allRoomTypes = [];
 
+// Build maps for room names and types
 foreach ($db->rooms->find(['_id' => ['$in' => $pendingRoomObjs]]) as $room) {
     $idStr = (string)$room['_id'];
     $roomMap[$idStr] = $room['room_name'];
@@ -32,7 +39,7 @@ foreach ($db->rooms->find(['_id' => ['$in' => $pendingRoomObjs]]) as $room) {
     }
 }
 
-// Build query
+// Build base condition (pending only)
 $conditions = [['status' => 'pending']];
 
 // Search by student name or ID
@@ -43,6 +50,7 @@ if ($search) {
     ]];
 }
 
+// Room type filter (exact match from dropdown options)
 if ($roomTypeFilter && $roomTypeFilter !== 'all') {
     $matchedRoomIds = [];
     foreach ($roomTypeMap as $roomId => $type) {
