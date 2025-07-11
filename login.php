@@ -165,12 +165,6 @@ session_start();
   error_reporting(E_ALL);
   ?>
 
-  <?php if (isset($_SESSION['error'])): ?>
-    <div style="color: red; margin-bottom: 1rem;">
-      <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
-    </div>
-  <?php endif; ?>
-
   <div class="login-wrapper">
     <div class="login-form-container">
       <h2 class="login-title">Welcome to<br>Taylor's Room Booking System!</h2>
@@ -187,6 +181,12 @@ session_start();
         <input type="password" name="password" class="login-input" placeholder="Password" required>
         <button type="submit" class="login-button">Sign In</button>
       </form>
+
+      <?php if (isset($_SESSION['error'])): ?>
+        <div style="color: red; margin-bottom: 1rem;">
+          <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
+        </div>
+      <?php endif; ?>
 
       <div class="login-footer">
         <a href="#" class="login-link">Forgot Password?</a>
